@@ -4,7 +4,7 @@
 #In diesem Programm kann pro Start nur eine Partie gespielt werden.
 #Dieses Programm dient zur Veranschaulichung wie ein normales Vier-Gewinnt Programm funktioniert.
 #Dies ist die Basis für die nächsten Programme.
-#Dies ist die Unkommentierte Version.
+#Dies ist die unkommentierte Version.
 
 import pygame as p
 
