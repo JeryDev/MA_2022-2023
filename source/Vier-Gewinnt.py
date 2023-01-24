@@ -33,8 +33,18 @@ field = []
 
 # Leeres Feld wird generiert
 for n in range(42):
-    field.append("nn")
+    field.append("nnn")
 
+#Aktueller Spielzug
+move = 0
+
+#Int wird in einen gültigen String umgewandelt
+def moveSyntax(move):
+    if move < 10:
+        move = "0" + str(move)
+        return move
+    else:
+        return str(move)
 
 # Die Spielfläche wird gezeichnet
 def drawGame():
@@ -63,9 +73,9 @@ def put():
         if (i + column) not in occupied:
             occupied.append(i + column)
             if player:
-                field[i + column] = "yy"
+                field[i + column] = "y" + moveSyntax(move)
             else:
-                field[i + column] = "rr"
+                field[i + column] = "r" + moveSyntax(move)
             inColumn = True
             x = column * sizeOne + (sizeOne / 2)
             y = (i // 7) * sizeOne + (sizeOne * 1.5)
@@ -88,10 +98,10 @@ def checkWin():
         yellowInRow = 0
         redInRow = 0
         for column in range(7):
-            if field[column + row * 7] == "rr":
+            if field[column + row * 7][0] == "r":
                 redInRow = redInRow + 1
                 yellowInRow = 0
-            elif field[column + row * 7] == "yy":
+            elif field[column + row * 7][0] == "y":
                 yellowInRow = yellowInRow + 1
                 redInRow = 0
             else:
@@ -109,10 +119,10 @@ def checkWin():
         yellowInRow = 0
         redInRow = 0
         for row in range(6):
-            if field[column + row * 7] == "rr":
+            if field[column + row * 7][0] == "r":
                 redInRow = redInRow + 1
                 yellowInRow = 0
-            elif field[column + row * 7] == "yy":
+            elif field[column + row * 7][0] == "y":
                 yellowInRow = yellowInRow + 1
                 redInRow = 0
             else:
@@ -131,10 +141,10 @@ def checkWin():
             yellowInRow = 0
             redInRow = 0
             for diagonal in range(4):
-                if field[column + row * 7 + diagonal * 8] == "rr":
+                if field[column + row * 7 + diagonal * 8][0] == "r":
                     redInRow = redInRow + 1
                     yellowInRow = 0
-                elif field[column + row * 7 + diagonal * 8] == "yy":
+                elif field[column + row * 7 + diagonal * 8][0] == "y":
                     yellowInRow = yellowInRow + 1
                     redInRow = 0
                 else:
@@ -153,10 +163,10 @@ def checkWin():
             yellowInRow = 0
             redInRow = 0
             for diagonal in range(4):
-                if field[column + 3 + row * 7 + diagonal * 6] == "rr":
+                if field[column + 3 + row * 7 + diagonal * 6][0] == "r":
                     redInRow = redInRow + 1
                     yellowInRow = 0
-                elif field[column + 3 + row * 7 + diagonal * 6] == "yy":
+                elif field[column + 3 + row * 7 + diagonal * 6][0] == "y":
                     yellowInRow = yellowInRow + 1
                     redInRow = 0
                 else:
@@ -190,6 +200,8 @@ while online:
             if player is not None:
                 # In played wird gespeichert ob jemand gesetzt hat.
                 played = put()
+                #Spielzug wird um 1 erhöht
+                move = move + 1
                 # In status wird gespeichert ob jemand gewonnen hat.
                 status = checkWin()
 
@@ -204,14 +216,44 @@ while online:
 
                 # Jemand hat gewonnen
                 else:
+                    # Erster Parameter bestimmt die Schriftart
+                    # Zweiter Parameter bestimmt die Schriftgrösse
+                    font = p.font.Font('freesansbold.ttf', 32)
+
                     if player:
-                        print("Gelb hat gewonnen!")
+                        # Text und koordinaten werden bestimmt
+                        text = font.render('Gelb hat gewonnen!', True, (0, 255, 0), (0, 0, 255))
+                        textRect = text.get_rect()
+                        textRect.center = (180, height // 20)
                     else:
-                        print("Rot hat gewonnen!")
+                        # Text und koordinaten werden bestimmt
+                        text = font.render('Rot hat gewonnen!', True, (0, 255, 0), (0, 0, 255))
+                        textRect = text.get_rect()
+                        textRect.center = (160, height // 20)
 
                     # player wird auf None gesetzt, damit man nicht mehr setzen kann.
                     player = None
-                    print("Spiel ist vorbei!")
+                    # Text wird gesetzt
+                    screen.blit(text, textRect)
+
+                    text = font.render('Neustarten', True, (0, 255, 0), (0, 0, 255))
+                    textRect = text.get_rect()
+                    textRect.center = (width - 110, height // 20)
+                    screen.blit(text, textRect)
+
+            if player is None:
+                position = p.mouse.get_pos()
+                # Es wird überprüft wo ob man auf "Neustarten" gedürckt hat
+                if textRect.x <= position[0] <= textRect.x + textRect.size[0]:
+                    if textRect.y <= position[1] <= textRect.y + textRect.size[1]:
+                        # Alle Werte werden zurückgesetzt, damit das Spiel von vorne beginnt
+                        occupied = []
+                        field = []
+                        for n in range(42):
+                            field.append("nnn")
+                        move = 0
+                        screen.fill(p.Color(0, 0, 0))
+                        player = True
 
         # Das Feld wird gezeichnet
         drawGame()
