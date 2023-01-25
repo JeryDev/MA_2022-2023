@@ -3,14 +3,22 @@
 #Für dies wird die Implementation "openpyxl" genutzt.
 #Link zur Dokumentation: https://openpyxl.readthedocs.io/en/stable/#
 
+import os
 import openpyxl as xl
 from openpyxl.styles import PatternFill, Border, Side
 from openpyxl.styles.borders import BORDER_THIN
+import platform
 
 # Dateityp: xlsx
-path = 'Pfad der Datei'
-Excel = xl.load_workbook(path)
-tabelname = Excel['Name der Tabelle']
+if platform.system() == "Darwin":
+    path = os.path.join(os.environ["HOME"], "Desktop", "Matura_Jery", "data.xlsx")
+elif platform.system == "Windows":
+    path = os.path.join(os.environ["HOMEPATH"], "Desktop", "Matura_Jery", "data.xlsx")
+else:
+    exit("Unsupported Sysetm")
+
+workbook = xl.load_workbook(path)
+worksheet = workbook['Stats']
 
 
 def setValue(row, column, tabel, value):
@@ -38,7 +46,7 @@ def setStyle(row, column, tabel):
 #Der kleinste Wert ist 0 und man kann so viele Partien eintragen wie man will.
 #Bei jedem zusätzlichen Eintrag muss man den Wert um 1 erhöhen.
 #Es werden 12 Zeilen und 7 Spalten pro GameID bearbeitet.
-gameID = 0
+gameID = getValue(1, 10, worksheet)
 
 #Liste welche das Feld abspeichert.
 field = []
@@ -48,18 +56,18 @@ steps = 0
 
 #Startliste wird generiert.
 for i in range(42):
-    field.append("nn")
+    field.append("nnn")
 
 #Eintragen der Daten in Excel.
 for i in range(6):
     for k in range(7):
-        setValue(12 * gameID + i + 1, k + 1, tabelname, field[i * 7 + k])
-        setStyle(12 * gameID + i + 1, k + 1, tabelname) #(optional)
+        setValue(12 * gameID + i + 1, k + 1, worksheet, field[i * 7 + k])
+        setStyle(12 * gameID + i + 1, k + 1, worksheet) #(optional)
 
-setValue(gameID * 12 + 8, 1, tabelname, "Steps:")
-setValue(gameID * 12 + 8, 2, tabelname, steps)
-setValue(gameID * 12 + 9, 1, tabelname, "R Value:")
-setValue(gameID * 12 + 10, 1, tabelname, "Y Value:")
+setValue(gameID * 12 + 8, 1, worksheet, "Steps:")
+setValue(gameID * 12 + 8, 2, worksheet, steps)
+setValue(gameID * 12 + 9, 1, worksheet, "R Value:")
+setValue(gameID * 12 + 10, 1, worksheet, "Y Value:")
 
 #Excel Datei wird abgespeichert.
-Excel.save(path)
+workbook.save(path)
