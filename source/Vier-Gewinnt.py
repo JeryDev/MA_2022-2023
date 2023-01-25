@@ -1,19 +1,96 @@
 # Vier-Gewinnt Python-Programm (pygame) von Jery:
 
-# Wichtig:
-# In diesem Programm kann pro Start nur eine Partie gespielt werden.
-# Dieses Programm dient zur Veranschaulichung wie ein normales Vier-Gewinnt Programm funktioniert.
-# Dies ist die Basis für die nächsten Programme.
+"""
+Wichtig:
 
-# pygame Import
+Falls du MacOS benutzt, kannst du die App direkt herunterladen:
+MacOS -> https://github.com/JeryDev/MA_2022-2023/blob/main/source/MacOS/download.md
+
+Windows -> Kommt bald
+
+Anleitung für andere Betriebssysteme:
+Auf dem System muss Python 3.11.0 installiert sein -> https://www.python.org
+Es ist wichtig, dass man auch einen Quelltext-Editor installiert: Empfehlung -> https://code.visualstudio.com
+Ausserdem müssen alle Pakete manuell installiert werden -> https://github.com/JeryDev/MA_2022-2023/tree/main/source/requirements.txt
+Danach muss diese Datei heruntergeladen werden.
+Das Programm muss anschliessend entweder in der Kommandozeile oder im Quelltext-Editor (VS Code) gestartet werden.
+Wenn du das Programm in VS Code starten willst, dann ist hier eine Anleitung -> https://code.visualstudio.com/docs/python/python-tutorial
+
+Pakete:
+-> https://github.com/JeryDev/MA_2022-2023/blob/main/source/requirements.txt
+"""
+
 import pygame as p
+import os
+import json
+import openpyxl as xl
+from openpyxl.styles import PatternFill, Border, Side
+from openpyxl.styles.borders import BORDER_THIN
 
+# Initialisierungsfunktion
 p.init()
 
-# Size definiert die grösse des ganzen Feldes bzw. des Fensters.
-size = 1050
+folder_path = "Pfad zum Ordner"
+file_path_xlsx = "Pfad zur Excel Datei"
+file_path_config = "Pfad zur Konfigurationsdatei"
 
-# Grösse von einem Feld
+# Werte aus Excel abrufen
+def getValue(row, column, tabel):
+    return tabel.cell(row=row, column=column).value
+
+# Werte in Excel festlegen
+def setValue(row: int, column: int, worksheet, value):
+    worksheet.cell(row=row, column=column).value = value
+
+# Überschaubares Design für einzelne Spalten setzen
+def setStyle(row, column, worksheet):
+    worksheet.cell(row=row, column=column).fill = PatternFill(fgColor="dadada", fill_type="solid")
+    thin_border = Border(
+        left=Side(border_style=BORDER_THIN, color='bfbfbf'),
+        right=Side(border_style=BORDER_THIN, color='bfbfbf'),
+        top=Side(border_style=BORDER_THIN, color='bfbfbf'),
+        bottom=Side(border_style=BORDER_THIN, color='bfbfbf')
+    )
+    worksheet.cell(row=row, column=column).border = thin_border
+
+# Überprüfen ob es den Ordner bereits gibt
+# Wenn nicht dann einen neuen Ordner anlegen
+if not os.path.isdir(folder_path):
+    os.mkdir(folder_path)
+                        
+# Überprüfen ob es die Excel Datei bereits gibt
+# Wenn nicht dann einen neuen Datei anlegen mit Standardwert
+if not os.path.isfile(file_path_xlsx):
+    workbook = xl.Workbook()
+    worksheet = workbook.active
+    worksheet.title = "Stats"
+    setValue(1, 9, worksheet, "GameID:")
+    setStyle(1, 9, worksheet)
+    setValue(1, 10, worksheet, 0)
+    setStyle(1, 10, worksheet)
+    workbook.save(file_path_xlsx)
+
+# Überprüfen ob es die Konfigurationsdatei bereits gibt
+# Wenn nicht dann einen neuen Datei anlegen mit Standardwert
+if not os.path.isfile(file_path_config): 
+    data = {
+      "size": 1050
+    }
+    with open(file_path_config, "w") as file:
+        json.dump(data, file, indent=1)
+                                      
+
+# Die Konfigurationsdatei öffnen
+f = open(file_path_config)
+  
+# Konfigurationsdatei in ein Dictionary umwandeln
+data = json.load(f)
+
+# Den "Size" Parameter abrufen
+size = data['size']
+f.close()
+
+# Grösse von einem Feld bestimmen
 sizeOne = int(size / 7)
 
 width = size
@@ -216,6 +293,26 @@ while online:
 
                 # Jemand hat gewonnen
                 else:
+                    # Excel Datei abrufen
+                    workbook = xl.load_workbook(file_path_xlsx)
+                    worksheet = workbook['Stats']
+
+                    # Aktuelle GameID abrufen
+                    gameID = getValue(1, 10, worksheet)
+
+                    # Alle Werte in Excel speichern
+                    for i in range(6):
+                        for k in range(7):
+                            setValue(12 * gameID + i + 1, k + 1, worksheet, field[i * 7 + k])
+                            setStyle(12 * gameID + i + 1, k + 1, worksheet) #(optional)
+
+                    setValue(gameID * 12 + 8, 1, worksheet, "Steps:")
+                    setValue(gameID * 12 + 8, 2, worksheet, move)
+                    setValue(gameID * 12 + 9, 1, worksheet, "R Value:")
+                    setValue(gameID * 12 + 10, 1, worksheet, "Y Value:")
+                    setValue(1, 10, worksheet, gameID + 1)
+                    workbook.save(file_path_xlsx)
+                    
                     # Erster Parameter bestimmt die Schriftart
                     # Zweiter Parameter bestimmt die Schriftgrösse
                     font = p.font.Font('freesansbold.ttf', 32)
