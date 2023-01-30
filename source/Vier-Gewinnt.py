@@ -3,10 +3,9 @@
 """
 Wichtig:
 
-Falls du MacOS benutzt, kannst du die App direkt herunterladen:
+Falls du MacOS oder Windows benutzt, kannst du die App direkt herunterladen:
 MacOS -> https://github.com/JeryDev/MA_2022-2023/blob/main/source/MacOS/download.md
-
-Windows -> Kommt bald
+Windows -> https://github.com/JeryDev/MA_2022-2023/blob/main/source/Windows/download.md
 
 Anleitung für andere Betriebssysteme:
 Auf dem System muss Python 3.11.0 installiert sein -> https://www.python.org
@@ -100,7 +99,7 @@ height = size
 screen = p.display.set_mode((width, height))
 
 # Fensterbeschriftung
-p.display.set_caption("4-Gewinnt")
+p.display.set_caption("Vier-Gewinnt")
 
 # Liste, welche die besetzten Felder speichert
 occupied = []
