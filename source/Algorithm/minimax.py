@@ -1,5 +1,4 @@
-#NOCH IN ARBEIT
-import math
+import time
 
 def is_valid_direction(next_index: int, end: int):
   if get_row(end) + 1 <= 6 and get_row(end) + 1 == get_row(next_index):
@@ -147,19 +146,19 @@ def analyse(board: list, position: int, color: str):
           if neighbour:
             get_color_of_neighbour = get_Color(neighbour, board)
             if get_color_of_neighbour == color:
-              value = value + 10000
+              value = 10000
             else:
               neighbour = get_direction(all_neighbours[i], position)
               if neighbour:
                 get_color_of_neighbour = get_Color(neighbour, board)
                 if get_all_neighbours == color:
-                  value = value + 10000
+                  value = 10000
           else:
             neighbour = get_direction(all_neighbours[i], position)
             if neighbour:
               get_color_of_neighbour = get_Color(neighbour, board)
               if get_color_of_neighbour == color:
-                value = value + 10000
+                value = 10000
         else:
           neighbour = get_direction(all_neighbours[i], position)
           if neighbour:
@@ -170,7 +169,7 @@ def analyse(board: list, position: int, color: str):
               if neighbour:
                 get_color_of_neighbour = get_Color(neighbour, board)
                 if get_color_of_neighbour == color:
-                  value = value + 10000      
+                  value = 10000     
       else:
         neighbour = get_direction(all_neighbours[i], position)
         if neighbour:
@@ -181,10 +180,7 @@ def analyse(board: list, position: int, color: str):
             if neighbour:
               get_color_of_neighbour = get_Color(neighbour, board)
               if get_color_of_neighbour == color:
-                value = value + 10000
-  
-  if check_middle_position(position):
-    value = value + 4
+                value = 10000
   
   if color == "y":
     return value
@@ -280,47 +276,56 @@ def check_win(board: list):
     return won
 
 def make_move(board: list, move: int, color: str):
-  board[move] = f"{color}{board[move][1:]}"
-  return board
+  newBoard = []
+  for i in range(len(board)):
+    newBoard.append(board[i])
+  newBoard[move] = f"{color}{newBoard[move][1:]}"
+  return newBoard
 
-def remove_move(board: list, move: int):
-  board[move] = f"n{board[move][1:]}"
-  return board
 
 
-def minimax(board, position, depth, maxPlayer, color):
+def minimax(board: list, position: int, depth: int, maxPlayer: bool, color: str, depth_safe: int):
   if depth == 0 or check_win(board) != None:
+    if check_win(board):
+      if color == "y":
+        return 10000
+      elif color == "r":
+        return -10000
     if depth == 0:
-      return analyse(board, position, color), f"ERROR {color}"
-    elif color == "y":
-      return 10000, f"ERROR {color}"
-    elif color == "r":
-      return -10000, f"ERROR {color}"
+      return analyse(board, position, color)
   
   if maxPlayer:
-    bestValue = -math.inf
-    bestMove = -1
+    bestValue = -100000
+    bestMove = None
     for move in get_free_spaces(board):
       newBoard = make_move(board, move, "y")
-      value = minimax(newBoard, move, depth - 1, False, "y")
-      print(value[0])
-      if bestValue < value[0]:
+      value = minimax(newBoard, move, depth - 1, False, "y", depth_safe)
+      if bestValue <= value:
+        if check_middle_position(move) and depth == depth_safe:
+          value = value + 4
         bestMove = move
-      bestValue = max(bestValue, value[0])
-      newBoard = remove_move(newBoard, move)
-    return bestValue, bestMove
+      bestValue = max(bestValue, value)
+      
+    if depth == depth_safe:
+      return bestValue, bestMove
+    else:
+      return bestValue
   
   else:
-    bestValue = math.inf
+    bestValue = 100000
+    bestMove = None
     for move in get_free_spaces(board):
       newBoard = make_move(board, move, "r")
-      value = minimax(newBoard, move, depth - 1, True, "r")
-      if bestValue > value[0]:
+      value = minimax(newBoard, move, depth - 1, True, "r", depth_safe)
+      if bestValue >= value:
+        if check_middle_position(move) and depth == depth_safe:
+          value = value - 4
         bestMove = move
-      bestValue = min(bestValue, value[0])
-      newBoard = remove_move(newBoard, move)
-    print("RETURN" + f"{bestValue}")
-    return bestValue, bestMove
+      bestValue = min(bestValue, value)
+    if depth == depth_safe:
+      return bestValue, bestMove
+    else:
+      return bestValue
 
 
 board_from_Excel = [
@@ -329,7 +334,7 @@ board_from_Excel = [
    "n14", "n15", "n16", "n17", "n18", "n19", "n20",
    "n21", "n22", "n23", "n24", "n25", "n26", "n27",
    "n28", "n29", "n30", "n31", "n32", "n33", "n34",
-   "n35", "n36", "n37", "n38", "n39", "n40", "n41"
+   "n35", "n36", "n37", "y38", "n39", "n40", "n41"
    ]
 
 board_to_use = []
@@ -344,11 +349,13 @@ if color == "y":
 else:
   maxPlayer = False
 
-depth = 3
+depth = 4
+depth_safe = depth
 
-results = minimax(board_to_use, -1, depth, maxPlayer, "y")
+StartTime = time.time()
+results = minimax(board_to_use, 38, depth, maxPlayer, color, depth_safe)
 
-
-
-print(f"Der Beste Zug ist bei Index: {results[1]}")
-print(f"V: {results[0]}")
+EndTime = time.time()
+print(f"Best Index: {results[1]}")
+print(f"Value: {results[0]}")
+print(f"Time: {round(EndTime - StartTime, 2)} Seconds")
