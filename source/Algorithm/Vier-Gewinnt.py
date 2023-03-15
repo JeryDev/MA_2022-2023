@@ -19,17 +19,27 @@ import platform
 p.init()
 
 
-def is_valid_direction(next_index: int, end: int):
-  if get_row(end) + 1 <= 6 and get_row(end) + 1 == get_row(next_index):
-    return True
-  elif get_row(end) - 1 <= 1 and get_row(end) - 1 == get_row(next_index):
-    return True
-  elif get_column(end) + 1 <= 6 and get_column(end) + 1 == get_column(next_index):
-    return True
-  elif get_column(end) - 1 <= 1 and get_column(end) - 1 == get_column(next_index):
-    return True
-  else:
-    return False
+def is_valid_direction(next_index: int, end: int, direction: str):
+  if direction == "vertical":
+    if get_row(end) + 1 == get_row(next_index):
+      return True
+    elif get_row(end) - 1 == get_row(next_index):
+      return True
+  elif direction == "horizontal":
+    if get_column(end) + 1 == get_column(next_index):
+      return True
+    elif get_column(end) - 1 == get_column(next_index):
+      return True
+  elif direction == "diagonal":
+    if get_row(end) + 1 == get_row(next_index) and get_column(end) + 1 == get_column(next_index):
+      return True
+    elif get_row(end) - 1 == get_row(next_index) and get_column(end) - 1 == get_column(next_index):
+      return True
+    elif get_row(end) + 1 == get_row(next_index) and get_column(end) - 1 == get_column(next_index):
+      return True
+    elif get_row(end) - 1 == get_row(next_index) and get_column(end) + 1 == get_column(next_index):
+      return True  
+  return False
 
 def get_row(index: int):
   return index // 7 + 1 
@@ -37,22 +47,11 @@ def get_row(index: int):
 def get_column(index: int):
   return index % 7 + 1
 
-def get_index(number: int, board: list):
-  for i in range(len(board)):
-    try:
-      if int(board[i][1]) == number:
-        return i
-    except(ValueError):
-      pass
-
 def get_Color(index: int, board: list):
-  try:
-    if index < len(board):
-      return board[index][0]
-    else:
-      return "n"
-  except:
-    print(f"Index is out of range! {index}")
+  if index < len(board):
+    return board[index][0]
+  else:
+    return "n"
 
 def get_free_spaces(board: list):
   free_spaces = []
@@ -65,76 +64,38 @@ def get_free_spaces(board: list):
   return free_spaces
 
 def check_middle_position(index: int):
-  if index in (3, 10, 17, 24, 31, 38):
-    return True
-  else:
-    return False
+  return index in (3, 10, 17, 24, 31, 38)
+
+DIRECTION_LOOKUP = {
+    -8: (-1, -1, "diagonal"), -7: (-1, 0, "vertical"), -6: (-1, 1, "diagonal"),
+    -1: (0, -1, "horizontal"),                          1: (0, 1, "horizontal"),
+     6: (1, -1, "diagonal"),  7: (1, 0, "vertical"),   8: (1, 1, "diagonal")
+}
 
 def get_direction(start: int, end: int):
-  if start - 8 == end:
-    if end - 8 >= 0:
-      if is_valid_direction(end - 8, end):
-        #up, left
-        return end - 8
-  if start - 7 == end:
-    if end - 7 >= 0:
-      if is_valid_direction(end - 7, end):
-        #up, middle
-        return end - 7
-  if start - 6 == end:
-    if end - 6 >= 0:
-      if is_valid_direction(end - 6, end):
-        #up, right
-        return end - 6
-  if start - 1 == end:
-    if end - 1 >= 0:
-      if is_valid_direction(end - 1, end):
-        #middle, left
-        return end - 1
-  if start + 1 == end:
-    if is_valid_direction(end + 1, end):
-        #middle, right
-        return end + 1
-  if start + 6 == end:
-    if end + 6 <= 41:
-      if is_valid_direction(end + 6, end):
-        #down, left
-        return end + 6
-  if start + 7 == end:
-    if end + 7 <= 41:
-      if is_valid_direction(end + 7, end):
-        #down, middle
-        return end + 7
-  if start + 8 == end:
-    if end + 8 <= 41:
-      if is_valid_direction(end + 8, end):
-        #down, right
-        return end + 8
-  
+  diff = end - start
+  if diff in DIRECTION_LOOKUP:
+    row_diff, col_diff, direction = DIRECTION_LOOKUP[diff]
+    next_index = end + row_diff * 7 + col_diff
+    if is_valid_direction(next_index, end, direction) and 0 <= next_index <= 41:
+      return next_index
   return False
 
 def get_all_neighbours(index: int):
   all_neighbours = []
-  up = False
   right = False
-  down = False
   left = False
-  if (index - 7) // 7 >= 0:
-    up = True
   if index // 7 == (index + 1) // 7:
     right = True
-  if (index + 7) // 7 <= 5:
-    down = True
   if index // 7 == (index - 1) // 7:
     left = True
-
-  if up == True:
+  if (index - 7) // 7 >= 0:
     all_neighbours.append(index - 7)
     if right == True:
       all_neighbours.append(index - 6)
     if left == True:
       all_neighbours.append(index - 8)
-  if down == True:
+  if (index + 7) // 7 <= 5:
     all_neighbours.append(index + 7)
     if right == True:
       all_neighbours.append(index + 8)
@@ -157,46 +118,46 @@ def analyse(board: list, position: int, color: str):
     if get_color_of_neighbour == color:
       value = value + 10
       neighbour = get_direction(position, all_neighbours[i])
-      if neighbour:
+      if neighbour != False:
         get_color_of_neighbour = get_Color(neighbour, board)
         if get_color_of_neighbour == color:
           value = value + 100
           neighbour = get_direction(all_neighbours[i], neighbour)
-          if neighbour:
+          if neighbour != False:
             get_color_of_neighbour = get_Color(neighbour, board)
             if get_color_of_neighbour == color:
               value = 10000
             else:
               neighbour = get_direction(all_neighbours[i], position)
-              if neighbour:
+              if neighbour != False:
                 get_color_of_neighbour = get_Color(neighbour, board)
                 if get_all_neighbours == color:
                   value = 10000
           else:
             neighbour = get_direction(all_neighbours[i], position)
-            if neighbour:
+            if neighbour != False:
               get_color_of_neighbour = get_Color(neighbour, board)
               if get_color_of_neighbour == color:
                 value = 10000
         else:
           neighbour = get_direction(all_neighbours[i], position)
-          if neighbour:
+          if neighbour != False:
             get_color_of_neighbour = get_Color(neighbour, board)
             if get_color_of_neighbour == color:
               value = value + 100
               neighbour = get_direction(position, neighbour)
-              if neighbour:
+              if neighbour != False:
                 get_color_of_neighbour = get_Color(neighbour, board)
                 if get_color_of_neighbour == color:
                   value = 10000     
       else:
         neighbour = get_direction(all_neighbours[i], position)
-        if neighbour:
+        if neighbour != False:
           get_color_of_neighbour = get_Color(neighbour, board)
           if get_color_of_neighbour == color:
             value = value + 100
             neighbour = get_direction(position, neighbour)
-            if neighbour:
+            if neighbour != False:
               get_color_of_neighbour = get_Color(neighbour, board)
               if get_color_of_neighbour == color:
                 value = 10000
@@ -302,49 +263,67 @@ def make_move(board: list, move: int, color: str):
   return newBoard
 
 
-
-def minimax(board: list, position: int, depth: int, maxPlayer: bool, color: str, depth_safe: int):
-  if depth == 0 or check_win(board) != None:
-    if check_win(board):
+def to_minimax(board: list, depth: int, color: str):
+  if depth > 0:
+    results = []
+    for position in get_free_spaces(board):
+      newBoard = make_move(board, position, color)
       if color == "y":
-        return 10000
+        maxPlayer = False
+        value = minimax(newBoard, position, depth - 1, maxPlayer, "y")
+        if check_middle_position(position):
+          value = value + 4
       elif color == "r":
-        return -10000
+        maxPlayer = True
+        value = minimax(newBoard, position, depth - 1, maxPlayer, "r")
+        if check_middle_position(position):
+          value = value - 4
+      results.append([value, position])
+    print(results)
+    if color == "y":
+      max = [-1000000, None]
+      for res in results:
+        if res[0] >= max[0]:
+          max = res
+      return max
+    
+    if color == "r":
+      min = [1000000, None]
+      for res in results:
+        if res[0] <= min[0]:
+          min = res
+      return min
+    
+    return results
+  return False  
+
+
+def minimax(board: list, position: int, depth: int, maxPlayer: bool, color: str):
+  if depth == 0 or check_win(board) != None:
+    if check_win(board) == "yellow":
+      return 10000
+    elif check_win(board) == "red":
+      return -10000
     if depth == 0:
       return analyse(board, position, color)
   
   if maxPlayer:
     bestValue = -100000
-    bestMove = None
     for move in get_free_spaces(board):
       newBoard = make_move(board, move, "y")
-      value = minimax(newBoard, move, depth - 1, False, "y", depth_safe)
+      value = minimax(newBoard, move, depth - 1, False, "y")
       if bestValue <= value:
-        if check_middle_position(move) and depth == depth_safe:
-          value = value + 4
-        bestMove = move
-      bestValue = max(bestValue, value)
-      
-    if depth == depth_safe:
-      return bestValue, bestMove
-    else:
-      return bestValue
+        bestValue = value
+    return bestValue
   
   else:
     bestValue = 100000
-    bestMove = None
     for move in get_free_spaces(board):
       newBoard = make_move(board, move, "r")
-      value = minimax(newBoard, move, depth - 1, True, "r", depth_safe)
+      value = minimax(newBoard, move, depth - 1, True, "r")
       if bestValue >= value:
-        if check_middle_position(move) and depth == depth_safe:
-          value = value - 4
-        bestMove = move
-      bestValue = min(bestValue, value)
-    if depth == depth_safe:
-      return bestValue, bestMove
-    else:
-      return bestValue
+        bestValue = value
+    return bestValue
 
 # Abfrage ob das Betriebssystem MacOS ist
 if platform.system() == "Darwin":
@@ -422,17 +401,17 @@ height = size
 screen = p.display.set_mode((width, height))
 
 # Fensterbeschriftung
-p.display.set_caption("4-Gewinnt")
+p.display.set_caption("Vier-Gewinnt")
 
 # Liste, welche die besetzten Felder speichert
 occupied = []
 
 # Liste, welche das aktuelle Feld speichert
-field = []
+board = []
 
 # Leeres Feld wird generiert
 for n in range(42):
-    field.append("nnn")
+    board.append("nnn")
 
 #Aktueller Spielzug
 move = 0
@@ -463,7 +442,7 @@ def drawBall(x, y):
 
 # Hier werden die Koordinaten geprüft und verarbeitet.
 # Es wird nach dem nächst freien Feld ein einer Spalte gesucht.
-# Schlussendlich werden die verarbeiteten Daten in den Listen occupied und field gespeichert.
+# Schlussendlich werden die verarbeiteten Daten in den Listen occupied und board gespeichert.
 def put(column: int):
     i = 35
     inColumn = False
@@ -471,9 +450,9 @@ def put(column: int):
         if (i + column) not in occupied:
             occupied.append(i + column)
             if player:
-                field[i + column] = "y" + moveSyntax(move)
+                board[i + column] = "y" + moveSyntax(move)
             else:
-                field[i + column] = "r" + moveSyntax(move)
+                board[i + column] = "r" + moveSyntax(move)
             inColumn = True
             x = column * sizeOne + (sizeOne / 2)
             y = (i // 7) * sizeOne + (sizeOne * 1.5)
@@ -491,7 +470,7 @@ online = True
 # Boolean: True = (Gelber Spieler) False = (Roter Spieler)
 player = True
 
-def gameover(file_path_xlsx, field, player):
+def gameover(file_path_xlsx, board, player):
   # Excel Datei abrufen
   workbook = xl.load_workbook(file_path_xlsx)
   worksheet = workbook['Stats']
@@ -502,7 +481,7 @@ def gameover(file_path_xlsx, field, player):
   # Alle Werte in Excel speichern
   for i in range(6):
     for k in range(7):
-      setValue(12 * gameID + i + 1, k + 1, worksheet, field[i * 7 + k])
+      setValue(12 * gameID + i + 1, k + 1, worksheet, board[i * 7 + k])
       setStyle(12 * gameID + i + 1, k + 1, worksheet) #(optional)
 
   setValue(gameID * 12 + 8, 1, worksheet, "Steps:")
@@ -546,7 +525,7 @@ while online:
 
         # Das Fenster wird neugeladen
         p.display.update()
-        if len(occupied) == len(field):
+        if len(occupied) == len(board):
           player = None
           font = p.font.Font('freesansbold.ttf', 32)
           text = font.render('Unentschieden!', True, (0, 255, 0), (0, 0, 255))
@@ -560,16 +539,16 @@ while online:
         
         if player == False:
           depth = 4
-          result = minimax(field, 38, depth, False, "r", depth)
+          result = to_minimax(board, depth, "r")
           occupied.append(result[1])
-          field[result[1]] = f"r{moveSyntax(move)}"
+          board[result[1]] = f"r{moveSyntax(move)}"
           column = get_column(result[1]) - 1
           row = get_row(result[1]) - 1
           x = column * sizeOne + (sizeOne / 2)
           y = row * sizeOne + (sizeOne * 1.5)
           drawBall(x, y)
           move = move + 1
-          status = check_win(field)
+          status = check_win(board)
           if played and player is not None:
             if not status:
               player = True
@@ -587,7 +566,7 @@ while online:
               # Alle Werte in Excel speichern
               for i in range(6):
                 for k in range(7):
-                  setValue(12 * gameID + i + 1, k + 1, worksheet, field[i * 7 + k])
+                  setValue(12 * gameID + i + 1, k + 1, worksheet, board[i * 7 + k])
                   setStyle(12 * gameID + i + 1, k + 1, worksheet) #(optional)
 
               setValue(gameID * 12 + 8, 1, worksheet, "Steps:")
@@ -629,9 +608,9 @@ while online:
                 if textRect.y <= position[1] <= textRect.y + textRect.size[1]:
                   # Alle Werte werden zurückgesetzt, damit das Spiel von vorne beginnt
                   occupied = []
-                  field = []
+                  board = []
                   for n in range(42):
-                    field.append("nnn")
+                    board.append("nnn")
                   
                   move = 0
                   screen.fill(p.Color(0, 0, 0))
@@ -644,7 +623,7 @@ while online:
                 #Spielzug wird um 1 erhöht
                 move = move + 1
                 # In status wird gespeichert ob jemand gewonnen hat.
-                status = check_win(field)
+                status = check_win(board)
             if played and player is not None:
                 if not status:
                     if player:
@@ -666,7 +645,7 @@ while online:
                     # Alle Werte in Excel speichern
                     for i in range(6):
                         for k in range(7):
-                            setValue(12 * gameID + i + 1, k + 1, worksheet, field[i * 7 + k])
+                            setValue(12 * gameID + i + 1, k + 1, worksheet, board[i * 7 + k])
                             setStyle(12 * gameID + i + 1, k + 1, worksheet) #(optional)
 
                     setValue(gameID * 12 + 8, 1, worksheet, "Steps:")
@@ -708,9 +687,9 @@ while online:
                     if textRect.y <= position[1] <= textRect.y + textRect.size[1]:
                         # Alle Werte werden zurückgesetzt, damit das Spiel von vorne beginnt
                         occupied = []
-                        field = []
+                        board = []
                         for n in range(42):
-                            field.append("nnn")
+                            board.append("nnn")
                         move = 0
                         screen.fill(p.Color(0, 0, 0))
                         player = True
