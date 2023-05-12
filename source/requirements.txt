@@ -4,5 +4,6 @@ Requirements:
 - os -> https://docs.python.org/3/library/os.html
 - json -> https://docs.python.org/3/library/json.html
 - openpyxl -> (Version: 3.0.10) -> https://openpyxl.readthedocs.io/en/stable/
+- datetime -> https://docs.python.org/3/library/datetime.html
 
-- "os" und "json" sollten bereits in Python enthalten sein.
+- "os", "json", "datetime" sollten bereits in Python enthalten sein.
