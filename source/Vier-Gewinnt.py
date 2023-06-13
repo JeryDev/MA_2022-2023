@@ -117,19 +117,6 @@ if not os.path.isfile(file_path_xlsx):
 
 workbook = xl.load_workbook(file_path_xlsx)
 
-try:
-    worksheet = workbook[sheet_name]
-
-except KeyError:
-    workbook.create_sheet(sheet_name)
-    workbook.save(file_path_xlsx)
-    workbook = xl.load_workbook(file_path_xlsx)
-    worksheet = workbook[sheet_name]
-    setValue(1, 9, worksheet, "GameID:")
-    setStyle(1, 9, worksheet)
-    setValue(1, 10, worksheet, 0)
-    setStyle(1, 10, worksheet)
-
 
 # Überprüfen ob es die Konfigurationsdatei bereits gibt
 # Wenn nicht dann einen neuen Datei anlegen mit Standardwert
@@ -194,7 +181,7 @@ def difference(num1: int, num2: int):
     return diff
 
 
-def getAccuracy(move: int, best: int, worst: int):
+def getAccuracy(move: int, maxValue: int, minValue: int, color: str):
     """
     Überprüft die Qualität des Zuges
 
@@ -206,11 +193,22 @@ def getAccuracy(move: int, best: int, worst: int):
     Returns:
         accuracy: Qualität des Zuges
     """
-
-    spectrum = difference(best, worst)
-    value = difference(move, worst)
-    accuracy = 100 / spectrum * value
-    return round(accuracy, 1)
+    if color == "y":
+        spectrum = difference(maxValue, minValue)
+        value = difference(move, minValue)
+        if spectrum > 0:
+            accuracy = 100 / spectrum * value
+        else:
+            accuracy = 100
+        return round(accuracy, 1)
+    elif color == "r":
+        spectrum = difference(maxValue, minValue)
+        value = difference(move, maxValue)
+        if spectrum > 0:
+            accuracy = 100 / spectrum * value
+        else:
+            accuracy = 100
+        return round(accuracy, 1)
 
 
 def isBlunder(accuracy, maxValue, minValue, move, color):
@@ -228,14 +226,12 @@ def isBlunder(accuracy, maxValue, minValue, move, color):
         1: Blunder
     """
     spectrum = difference(maxValue, minValue)
-    # Verpasster Zug
-    if accuracy > 10 and spectrum > 250:
-        return 1
+
     # Verpasster Gewinn (Gelb)
     if color == "y" and maxValue >= 9996 and move < 9996:
         return 1
     # Verpasster Gewinn (Rot)
-    if color == "r" and maxValue <= -9996 and move > -9996:
+    if color == "r" and minValue <= -9996 and move > -9996:
         return 1
     # Gewinnchance für Rot
     if color == "y" and minValue <= -9996 and maxValue > -9996 and move <= -9996:
@@ -243,11 +239,15 @@ def isBlunder(accuracy, maxValue, minValue, move, color):
     # Gewinnchance für Gelb
     if color == "r" and maxValue >= 9996 and minValue < 9996 and move >= 9996:
         return 1
+    # Verpasster Zug
+    if accuracy < 10 and spectrum > 250:
+        return 1
     # Kein Blunder
-    return 0
+    else:
+        return 0
 
 
-def is_valid_direction(next_index: int, end: int, direction: str):
+def isValidDirection(next_index: int, end: int, direction: str):
     """
     Überprüft, ob ein Index in der gegebenen Richtung gültig ist, wenn er als
     nächstes besucht wird.
@@ -261,45 +261,45 @@ def is_valid_direction(next_index: int, end: int, direction: str):
         True, wenn der nächste Index in der gegebenen Richtung gültig ist, andernfalls False.
     """
     if direction == "vertical":
-        if get_row(end) + 1 == get_row(next_index):
+        if getRow(end) + 1 == getRow(next_index):
             # Der nächste Index ist eine Zeile darunter
             return True
-        elif get_row(end) - 1 == get_row(next_index):
+        elif getRow(end) - 1 == getRow(next_index):
             # Der nächste Index ist eine Zeile darüber
             return True
     elif direction == "horizontal":
-        if get_column(end) + 1 == get_column(next_index):
+        if getColumn(end) + 1 == getColumn(next_index):
             # Der nächste Index ist eine Spalte rechts
             return True
-        elif get_column(end) - 1 == get_column(next_index):
+        elif getColumn(end) - 1 == getColumn(next_index):
             # Der nächste Index ist eine Spalte links
             return True
     elif direction == "diagonal":
-        if get_row(end) + 1 == get_row(next_index) and get_column(
+        if getRow(end) + 1 == getRow(next_index) and getColumn(
             end
-        ) + 1 == get_column(next_index):
+        ) + 1 == getColumn(next_index):
             # Der nächste Index ist diagonal unten rechts
             return True
-        elif get_row(end) - 1 == get_row(next_index) and get_column(
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(
             end
-        ) - 1 == get_column(next_index):
+        ) - 1 == getColumn(next_index):
             # Der nächste Index ist diagonal oben links
             return True
-        elif get_row(end) + 1 == get_row(next_index) and get_column(
+        elif getRow(end) + 1 == getRow(next_index) and getColumn(
             end
-        ) - 1 == get_column(next_index):
+        ) - 1 == getColumn(next_index):
             # Der nächste Index ist diagonal unten links
             return True
-        elif get_row(end) - 1 == get_row(next_index) and get_column(
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(
             end
-        ) + 1 == get_column(next_index):
+        ) + 1 == getColumn(next_index):
             # Der nächste Index ist diagonal oben rechts
             return True
     # Der nächste Index ist in keiner der erlaubten Richtungen gültig.
     return False
 
 
-def get_row(index: int):
+def getRow(index: int):
     """
     Gibt die Zeile zurück, in der sich der gegebene Index befindet.
 
@@ -312,7 +312,7 @@ def get_row(index: int):
     return index // 7 + 1
 
 
-def get_column(index: int):
+def getColumn(index: int):
     """
     Gibt die Spalte zurück, in der sich der gegebene Index befindet.
 
@@ -325,7 +325,7 @@ def get_column(index: int):
     return index % 7 + 1
 
 
-def get_Color(index: int, board: list):
+def getColor(index: int, board: list):
     """
     Gibt die Farbe des Steins am gegebenen Index auf dem gegebenen Spielbrett zurück.
 
@@ -345,7 +345,7 @@ def get_Color(index: int, board: list):
         return "n"
 
 
-def get_free_spaces(board: list):
+def getUnoccupiedLocations(board: list):
     """
     Gibt eine Liste von Indexe zurück, die auf freie Plätze auf dem Spielbrett verweisen.
 
@@ -366,7 +366,7 @@ def get_free_spaces(board: list):
     return free_spaces
 
 
-def check_middle_position(index: int):
+def isMiddle(index: int):
     """
     Überprüft, ob der gegebene Index in der Mitte auf dem Spielbrett ist.
 
@@ -392,7 +392,7 @@ DIRECTION_LOOKUP = {
 }
 
 
-def get_direction(start: int, end: int):
+def getDirection(start: int, end: int):
     """
     Bestimmt die Richtung basierend auf dem Start- und Endindex.
 
@@ -412,13 +412,14 @@ def get_direction(start: int, end: int):
         # Der nächste Index in der berechneten Richtung wird berechnet.
         next_index = end + row_diff * 7 + col_diff
         # Überprüfung, ob der nächste Index in der berechneten Richtung gültig ist und innerhalb des Spielbretts liegt.
-        if is_valid_direction(next_index, end, direction) and 0 <= next_index <= 41:
+        if isValidDirection(next_index, end, direction) and 0 <= next_index <= 41:
             return next_index  # Der nächste Index wird zurückgegeben.
     # Wenn die Richtung ungültig ist oder der nächste Index außerhalb des Spielbretts liegt, wird False zurückgegeben.
     return False
 
 
-def get_all_neighbours(index: int):
+def getAllNeighbour(index: int):
+    #get_all_neighbour
     """
     Bestimmt alle Steine, welche sich um einen bestimmten Index befinden.
 
@@ -473,46 +474,46 @@ def analyse(board: list, position: int, color: str):
         Gibt einen Wert zurück, der ausgibt, wie gut eine Position ist.
     """
     value = 0
-    all_neighbours = get_all_neighbours(position)
+    all_neighbours = getAllNeighbour(position)
     # Iteriere durch die Nachbarn des Steins
     for neighbour in all_neighbours:
         # Wenn die Farbe des Nachbarn nicht die gleiche ist wie die Farbe des Spielers, ignoriere ihn
-        neighbour_color = get_Color(neighbour, board)
+        neighbour_color = getColor(neighbour, board)
         if neighbour_color != color:
             continue
         value += 10
 
         # Wenn der Nachbar auch einen Nachbarn in der gleichen Richtung hat, erhöhe den Wert um 100
-        neighbour_2 = get_direction(position, neighbour)
+        neighbour_2 = getDirection(position, neighbour)
         if neighbour_2 is False:
             continue
 
-        neighbour_2_color = get_Color(neighbour_2, board)
+        neighbour_2_color = getColor(neighbour_2, board)
         if neighbour_2_color == color:
             value += 100
 
             # Wenn der Nachbar auch einen zweiten Nachbarn in der gleichen Richtung hat, erhöhe den Wert auf 10000
-            neighbour_3 = get_direction(neighbour, neighbour_2)
+            neighbour_3 = getDirection(neighbour, neighbour_2)
 
             if neighbour_3 is not False:
-                neighbour_3_color = get_Color(neighbour_3, board)
+                neighbour_3_color = getColor(neighbour_3, board)
 
                 if neighbour_3_color == color:
                     value = 10000
                     break
 
                 # Wenn der Nachbar auch einen Nachbarn in der entgegengesetzten Richtung hat, erhöhe den Wert auf 10000
-                neighbour_3 = get_direction(neighbour, position)
+                neighbour_3 = getDirection(neighbour, position)
 
-                if neighbour_3 is not False and get_Color(neighbour_3, board) == color:
+                if neighbour_3 is not False and getColor(neighbour_3, board) == color:
                     value = 10000
                     break
 
         else:
             # Wenn der Nachbar keinen zweiten Nachbarn in der gleichen Richtung hat, aber einen in die entgegengesetzte Richtung hat, erhöhe den Wert um 100
-            neighbour_3 = get_direction(neighbour, position)
+            neighbour_3 = getDirection(neighbour, position)
 
-            if neighbour_3 is not False and get_Color(neighbour_3, board) == color:
+            if neighbour_3 is not False and getColor(neighbour_3, board) == color:
                 value += 100
     if color == "y":
         return value
@@ -593,7 +594,7 @@ def checkWin(board: list):
     return won
 
 
-def make_move(board: list, move: int, color: str):
+def makeMove(board: list, move: int, color: str):
     """
     Führt einen Spielzug durch, indem ein Stein des Spielers auf dem Spielbrett platziert wird.
 
@@ -614,7 +615,7 @@ def make_move(board: list, move: int, color: str):
     return newBoard
 
 
-def to_minimax(board: list, depth: int, color: str, alpha: int, beta: int):
+def getResults(board: list, depth: int, color: str, alpha: int, beta: int):
     """
     Wandelt das Spielbrett in ein Format um, das von der Minimax-Funktion verwendet werden kann.
 
@@ -637,20 +638,20 @@ def to_minimax(board: list, depth: int, color: str, alpha: int, beta: int):
     results = []
 
     # Durchlaufe alle freien Positionen auf dem Spielbrett
-    for position in get_free_spaces(board):
+    for position in getUnoccupiedLocations(board):
         # Führe den Spielzug aus und berechne den Bewertungswert des Spielbretts
-        newBoard = make_move(board, position, color)
+        newBoard = makeMove(board, position, color)
         if color == "y":
             maxPlayer = False
             value = minimax(newBoard, position, depth - 1, maxPlayer, alpha, beta)
             # Füge einen Bonus hinzu, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
-            if check_middle_position(position):
+            if isMiddle(position):
                 value = value + 4
         elif color == "r":
             maxPlayer = True
             value = minimax(newBoard, position, depth - 1, maxPlayer, alpha, beta)
             # Ziehe einen Malus ab, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
-            if check_middle_position(position):
+            if isMiddle(position):
                 value = value - 4
 
         # Füge den Bewertungswert des Spielzugs und seine Position der Ergebnisliste hinzu
@@ -703,9 +704,9 @@ def minimax(
     if maxPlayer:
         bestValue = -1000000
         # Für jeden möglichen Zug
-        for move in get_free_spaces(board):
+        for move in getUnoccupiedLocations(board):
             # Mach den Zug auf dem Board
-            newBoard = make_move(board, move, "y")
+            newBoard = makeMove(board, move, "y")
             # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
             value = minimax(newBoard, move, depth - 1, False, alpha, beta)
             # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
@@ -722,9 +723,9 @@ def minimax(
     else:
         bestValue = 1000000
         # Für jeden möglichen Zug
-        for move in get_free_spaces(board):
+        for move in getUnoccupiedLocations(board):
             # Mach den Zug auf dem Board
-            newBoard = make_move(board, move, "r")
+            newBoard = makeMove(board, move, "r")
             # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
             value = minimax(newBoard, move, depth - 1, True, alpha, beta)
             # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
@@ -789,15 +790,15 @@ def put(column: int, board: list):
             screen.blit(wait, waitRect)
             p.display.update()
             if player:
-                values, positions = to_minimax(board, 7, "y", -1000000, 1000000)
+                values, positions = getResults(board, 7, "y", -1000000, 1000000)
                 current = values[positions.index(i + column)]
-                accuracy = getAccuracy(current, max(values), min(values))
+                accuracy = getAccuracy(current, max(values), min(values), "y")
                 blunder = isBlunder(accuracy, max(values), min(values), current, "y")
                 board[i + column] = "y" + moveSyntax(move)
             else:
-                values, positions = to_minimax(board, 7, "r", -1000000, 1000000)
+                values, positions = getResults(board, 7, "r", -1000000, 1000000)
                 current = values[positions.index(i + column)]
-                accuracy = getAccuracy(current, min(values), max(values))
+                accuracy = getAccuracy(current, max(values), min(values), "r")
                 blunder = isBlunder(accuracy, max(values), min(values), current, "r")
                 board[i + column] = "r" + moveSyntax(move)
             inColumn = True
@@ -807,8 +808,10 @@ def put(column: int, board: list):
             break
         else:
             i = i - 7
-
-    return inColumn, accuracy, blunder
+    try:
+        return inColumn, accuracy, blunder
+    except:
+        return None, None, None
 
 
 # Boolean: True = (Das Spiel ist am laufen) False = (Das Spiel ist nicht mehr am laufen)
@@ -848,9 +851,14 @@ while online:
                 move = move + 1
                 # In status wird gespeichert ob jemand gewonnen hat.
                 status = checkWin(board)
+                if len(occupied) == 42:
+                    draw = True
+                else:
+                    draw = False
+                
 
             if played and player is not None:
-                if not status:
+                if not status and not draw:
                     if player:
                         # Spieler wird gewechselt
                         yellowAccuracy = yellowAccuracy + accuracy
@@ -897,8 +905,25 @@ while online:
                         yellowMoves = int(move / 2) + 1
                     redMoves = int(move / 2)
 
+                    # Mappe abrufen / erstellen
+                    try:
+                        worksheet = workbook[sheet_name]
+
+                    except KeyError:
+                        workbook.create_sheet(sheet_name)
+                        workbook.save(file_path_xlsx)
+                        workbook = xl.load_workbook(file_path_xlsx)
+                        worksheet = workbook[sheet_name]
+                        setValue(1, 9, worksheet, "GameID:")
+                        setStyle(1, 9, worksheet)
+                        setValue(1, 10, worksheet, 0)
+                        setStyle(1, 10, worksheet)
+                        workbook.save(file_path_xlsx)
+                        workbook = xl.load_workbook(file_path_xlsx)
+                        worksheet = workbook[sheet_name]
+
                     # Aktuelle GameID abrufen
-                    gameID = getValue(1, 10, worksheet)
+                    gameID = int(getValue(1, 10, worksheet))
 
                     # Alle Werte werden in Excel gespeichert
                     for i in range(6):
@@ -965,20 +990,28 @@ while online:
                     # Zweiter Parameter bestimmt die Schriftgrösse
                     font = p.font.Font("freesansbold.ttf", 32)
 
-                    if player:
-                        # Text und koordinaten werden bestimmt
-                        text = font.render(
-                            "Gelb hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
-                        )
-                        textRect = text.get_rect()
-                        textRect.center = (180, height // 20)
+                    if not draw:
+                        if player:
+                            # Text und koordinaten werden bestimmt
+                            text = font.render(
+                                "Gelb hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
+                            )
+                            textRect = text.get_rect()
+                            textRect.center = (180, height // 20)
+                        else:
+                            # Text und koordinaten werden bestimmt
+                            text = font.render(
+                                "Rot hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
+                            )
+                            textRect = text.get_rect()
+                            textRect.center = (160, height // 20)
                     else:
                         # Text und koordinaten werden bestimmt
-                        text = font.render(
-                            "Rot hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
-                        )
-                        textRect = text.get_rect()
-                        textRect.center = (160, height // 20)
+                            text = font.render(
+                                "Unentschieden!", True, (0, 255, 0), (0, 0, 255)
+                            )
+                            textRect = text.get_rect()
+                            textRect.center = (160, height // 20)
 
                     # player wird auf None gesetzt, damit man nicht mehr setzen kann.
                     player = None
