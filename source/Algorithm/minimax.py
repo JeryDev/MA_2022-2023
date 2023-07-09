@@ -1,45 +1,44 @@
 from time import time
 
-
-def is_valid_direction(next_index: int, end: int, direction: str):
+def isValidDirection(next_index: int, end: int, direction: str):
     if direction == "vertical":
-        if get_row(end) + 1 == get_row(next_index):
+        if getRow(end) + 1 == getRow(next_index):
             return True
-        elif get_row(end) - 1 == get_row(next_index):
+        elif getRow(end) - 1 == getRow(next_index):
             return True
     elif direction == "horizontal":
-        if get_column(end) + 1 == get_column(next_index):
+        if getColumn(end) + 1 == getColumn(next_index):
             return True
-        elif get_column(end) - 1 == get_column(next_index):
+        elif getColumn(end) - 1 == getColumn(next_index):
             return True
     elif direction == "diagonal":
-        if get_row(end) + 1 == get_row(next_index) and get_column(end) + 1 == get_column(next_index):
+        if getRow(end) + 1 == getRow(next_index) and getColumn(end) + 1 == getColumn(next_index):
             return True
-        elif get_row(end) - 1 == get_row(next_index) and get_column(end) - 1 == get_column(next_index):
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(end) - 1 == getColumn(next_index):
             return True
-        elif get_row(end) + 1 == get_row(next_index) and get_column(end) - 1 == get_column(next_index):
+        elif getRow(end) + 1 == getRow(next_index) and getColumn(end) - 1 == getColumn(next_index):
             return True
-        elif get_row(end) - 1 == get_row(next_index) and get_column(end) + 1 == get_column(next_index):
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(end) + 1 == getColumn(next_index):
             return True
     return False
 
 
-def get_row(index: int):
+def getRow(index: int):
     return index // 7 + 1
 
 
-def get_column(index: int):
+def getColumn(index: int):
     return index % 7 + 1
 
 
-def get_Color(index: int, board: list):
+def getColor(index: int, board: list):
     if index < len(board):
         return board[index][0]
     else:
         return "n"
 
 
-def get_free_spaces(board: list):
+def getFreePositions(board: list):
     free_spaces = []
     for i in range(7):
         for k in range(6):
@@ -49,8 +48,7 @@ def get_free_spaces(board: list):
                 break
     return free_spaces
 
-
-def check_middle_position(index: int):
+def checkMiddlePosition(index: int):
     return index in (3, 10, 17, 24, 31, 38)
 
 
@@ -61,17 +59,17 @@ DIRECTION_LOOKUP = {
 }
 
 
-def get_direction(start: int, end: int):
+def getDirection(start: int, end: int):
     diff = end - start
     if diff in DIRECTION_LOOKUP:
         row_diff, col_diff, direction = DIRECTION_LOOKUP[diff]
         next_index = end + row_diff * 7 + col_diff
-        if is_valid_direction(next_index, end, direction) and 0 <= next_index <= 41:
+        if isValidDirection(next_index, end, direction) and 0 <= next_index <= 41:
             return next_index
     return False
 
 
-def get_all_neighbours(index: int):
+def getAllNeighbours(index: int):
     all_neighbours = []
     right = False
     left = False
@@ -100,159 +98,141 @@ def get_all_neighbours(index: int):
     return all_neighbours
 
 
-def analyse(board: list, position: int, color: str):
-    value = 0
-    all_neighbours = get_all_neighbours(position)
-    for i in range(len(all_neighbours)):
-        get_color_of_neighbour = get_Color(all_neighbours[i], board)
-        if get_color_of_neighbour == color:
-            value = value + 10
-            neighbour = get_direction(position, all_neighbours[i])
-            if neighbour != False:
-                get_color_of_neighbour = get_Color(neighbour, board)
-                if get_color_of_neighbour == color:
-                    value = value + 100
-                    neighbour = get_direction(all_neighbours[i], neighbour)
-                    if neighbour != False:
-                        get_color_of_neighbour = get_Color(neighbour, board)
-                        if get_color_of_neighbour == color:
-                            value = 10000
-                        else:
-                            neighbour = get_direction(
-                                all_neighbours[i], position)
-                            if neighbour != False:
-                                get_color_of_neighbour = get_Color(
-                                    neighbour, board)
-                                if get_all_neighbours == color:
-                                    value = 10000
-                    else:
-                        neighbour = get_direction(all_neighbours[i], position)
-                        if neighbour != False:
-                            get_color_of_neighbour = get_Color(
-                                neighbour, board)
-                            if get_color_of_neighbour == color:
-                                value = 10000
-                else:
-                    neighbour = get_direction(all_neighbours[i], position)
-                    if neighbour != False:
-                        get_color_of_neighbour = get_Color(neighbour, board)
-                        if get_color_of_neighbour == color:
-                            value = value + 100
-                            neighbour = get_direction(position, neighbour)
-                            if neighbour != False:
-                                get_color_of_neighbour = get_Color(
-                                    neighbour, board)
-                                if get_color_of_neighbour == color:
-                                    value = 10000
-            else:
-                neighbour = get_direction(all_neighbours[i], position)
-                if neighbour != False:
-                    get_color_of_neighbour = get_Color(neighbour, board)
-                    if get_color_of_neighbour == color:
-                        value = value + 100
-                        neighbour = get_direction(position, neighbour)
-                        if neighbour != False:
-                            get_color_of_neighbour = get_Color(
-                                neighbour, board)
-                            if get_color_of_neighbour == color:
-                                value = 10000
+def evaluate(board: list, position: int, color: str):
+    """
+    Analysiert das Spiel anhand einer Position.
 
+    Args:
+        board: Eine Liste, die das Spielbrett repräsentiert.
+        position: Ein Index, der die Position eines Steines repräsentiert.
+        color: Die Farbe des Steines
+
+    Returns:
+        Gibt einen Wert zurück, der ausgibt, wie gut eine Position ist.
+    """
+    value = 0
+    all_neighbours = getAllNeighbours(position)
+    # Iteriere durch die Nachbarn des Steins
+    for neighbour in all_neighbours:
+        # Wenn die Farbe des Nachbarn nicht die gleiche ist wie die Farbe des Spielers, ignoriere ihn
+        neighbour_color = getColor(neighbour, board)
+        if neighbour_color != color:
+            continue
+        value += 10
+
+        # Wenn der Nachbar auch einen Nachbarn in der gleichen Richtung hat, erhöhe den Wert um 100
+        neighbour_2 = getDirection(position, neighbour)
+        if neighbour_2 is False:
+            continue
+
+        neighbour_2_color = getColor(neighbour_2, board)
+        if neighbour_2_color == color:
+            value += 100
+
+            # Wenn der Nachbar auch einen zweiten Nachbarn in der gleichen Richtung hat, erhöhe den Wert auf 10000
+            neighbour_3 = getDirection(neighbour, neighbour_2)
+
+            if neighbour_3 is not False:
+                neighbour_3_color = getColor(neighbour_3, board)
+
+                if neighbour_3_color == color:
+                    value = 10000
+                    break
+
+                # Wenn der Nachbar auch einen Nachbarn in der entgegengesetzten Richtung hat, erhöhe den Wert auf 10000
+                neighbour_3 = getDirection(neighbour, position)
+
+                if neighbour_3 is not False and getColor(neighbour_3, board) == color:
+                    value = 10000
+                    break
+
+        else:
+            # Wenn der Nachbar keinen zweiten Nachbarn in der gleichen Richtung hat, aber einen in die entgegengesetzte Richtung hat, erhöhe den Wert um 100
+            neighbour_3 = getDirection(neighbour, position)
+
+            if neighbour_3 is not False and getColor(neighbour_3, board) == color:
+                value += 100
+    
     if color == "y":
         return value
     else:
         return -value
 
 
-def check_win(board: list):
+def checkWin(board: list):
+    """
+    Überprüft ob jemand gewonnen hat
+
+    Args:
+        board: Eine Liste, die das Spielbrett repräsentiert.
+
+    Returns:
+        yellow: Gelb hat gewonnen.
+        red: Rot hat gewonnen.
+        None: Niemand hat gewonnen.
+    """
     won = None
+
+    # Überprüfung der horizontalen Gewinnbedingung
     for row in range(6):
-        yellowInRow = 0
-        redInRow = 0
-        for column in range(7):
-            if board[column + row * 7][0] == "r":
-                redInRow = redInRow + 1
-                yellowInRow = 0
-            elif board[column + row * 7][0] == "y":
-                yellowInRow = yellowInRow + 1
-                redInRow = 0
-            else:
-                yellowInRow = 0
-                redInRow = 0
-            if redInRow == 4:
-                won = "red"
-                break
-            if yellowInRow == 4:
-                won = "yellow"
-                break
+        for column in range(4):
+            cell_index = column + row * 7
+            if board[cell_index][0] != "n":
+                if all(
+                    board[cell_index + i][0] == board[cell_index][0]
+                    for i in range(1, 4)
+                ):
+                    if board[cell_index][0] == "y":
+                        return "yellow"
+                    else:
+                        return "red"
 
-    # Überprüfung: Vertikal (oben / unten)
+    # Überprüfung der vertikalen Gewinnbedingung
     for column in range(7):
-        yellowInRow = 0
-        redInRow = 0
-        for row in range(6):
-            if board[column + row * 7][0] == "r":
-                redInRow = redInRow + 1
-                yellowInRow = 0
-            elif board[column + row * 7][0] == "y":
-                yellowInRow = yellowInRow + 1
-                redInRow = 0
-            else:
-                yellowInRow = 0
-                redInRow = 0
-            if redInRow == 4:
-                won = "red"
-                break
-            if yellowInRow == 4:
-                won = "yellow"
-                break
+        for row in range(3):
+            cell_index = column + row * 7
+            if board[cell_index][0] != "n":
+                if all(
+                    board[cell_index + i * 7][0] == board[cell_index][0]
+                    for i in range(1, 4)
+                ):
+                    if board[cell_index][0] == "y":
+                        return "yellow"
+                    else:
+                        return "red"
 
-    # Überprüfung: Diagonal (rechts unten / links oben)
+    # Überprüfung der Diagonalen (rechts unten nach links oben) Gewinnbedingung
     for row in range(3):
         for column in range(4):
-            yellowInRow = 0
-            redInRow = 0
-            for diagonal in range(4):
-                if board[column + row * 7 + diagonal * 8][0] == "r":
-                    redInRow = redInRow + 1
-                    yellowInRow = 0
-                elif board[column + row * 7 + diagonal * 8][0] == "y":
-                    yellowInRow = yellowInRow + 1
-                    redInRow = 0
-                else:
-                    yellowInRow = 0
-                    redInRow = 0
-                if redInRow == 4:
-                    won = "red"
-                    break
-                if yellowInRow == 4:
-                    won = "yellow"
-                    break
+            cell_index = column + row * 7
+            if board[cell_index][0] != "n":
+                if all(
+                    board[cell_index + i * 8][0] == board[cell_index][0]
+                    for i in range(1, 4)
+                ):
+                    if board[cell_index][0] == "y":
+                        return "yellow"
+                    else:
+                        return "red"
 
-    # Überprüfung: Diagonal (rechts oben / links unten)
+    # Überprüfung der Diagonalen (links unten nach rechts oben) Gewinnbedingung
     for row in range(3):
         for column in range(4):
-            yellowInRow = 0
-            redInRow = 0
-            for diagonal in range(4):
-                if board[column + 3 + row * 7 + diagonal * 6][0] == "r":
-                    redInRow = redInRow + 1
-                    yellowInRow = 0
-                elif board[column + 3 + row * 7 + diagonal * 6][0] == "y":
-                    yellowInRow = yellowInRow + 1
-                    redInRow = 0
-                else:
-                    yellowInRow = 0
-                    redInRow = 0
-                if redInRow == 4:
-                    won = "red"
-                    break
-                if yellowInRow == 4:
-                    won = "yellow"
-                    break
+            cell_index = column + 3 + row * 7
+            if board[cell_index][0] != "n":
+                if all(
+                    board[cell_index + i * 6][0] == board[cell_index][0]
+                    for i in range(1, 4)
+                ):
+                    if board[cell_index][0] == "y":
+                        return "yellow"
+                    else:
+                        return "red"
+
     return won
 
 
-def make_move(board: list, move: int, color: str):
+def makeMove(board: list, move: int, color: str):
     newBoard = []
     for i in range(len(board)):
         newBoard.append(board[i])
@@ -260,20 +240,20 @@ def make_move(board: list, move: int, color: str):
     return newBoard
 
 
-def to_minimax(board: list, depth: int, color: str):
+def getResults(board: list, depth: int, color: str):
     if depth > 0:
         results = []
-        for position in get_free_spaces(board):
-            newBoard = make_move(board, position, color)
+        for position in getFreePositions(board):
+            newBoard = makeMove(board, position, color)
             if color == "y":
                 maxPlayer = False
                 value = minimax(newBoard, position, depth - 1, maxPlayer)
-                if check_middle_position(position):
+                if checkMiddlePosition(position):
                     value = value + 4
             elif color == "r":
                 maxPlayer = True
                 value = minimax(newBoard, position, depth - 1, maxPlayer)
-                if check_middle_position(position):
+                if checkMiddlePosition(position):
                     value = value - 4
             results.append([value, position])
         print(results)
@@ -296,29 +276,29 @@ def to_minimax(board: list, depth: int, color: str):
 
 
 def minimax(board: list, position: int, depth: int, maxPlayer: bool):
-    if depth == 0 or check_win(board) != None:
-        if check_win(board) == "yellow":
+    if depth == 0 or checkWin(board) != None:
+        if checkWin(board) == "yellow":
             return 10000
-        elif check_win(board) == "red":
+        elif checkWin(board) == "red":
             return -10000
         if depth == 0:
             if maxPlayer:
-                return analyse(board, position, "r")
+                return evaluate(board, position, "r")
             else:
-                return analyse(board, position, "y")
+                return evaluate(board, position, "y")
 
     if maxPlayer:
         bestValue = -1000000
-        for move in get_free_spaces(board):
-            newBoard = make_move(board, move, "y")
+        for move in getFreePositions(board):
+            newBoard = makeMove(board, move, "y")
             value = minimax(newBoard, move, depth - 1, False)
             bestValue = max(bestValue, value)
         return bestValue
 
     else:
         bestValue = 1000000
-        for move in get_free_spaces(board):
-            newBoard = make_move(board, move, "r")
+        for move in getFreePositions(board):
+            newBoard = makeMove(board, move, "r")
             value = minimax(newBoard, move, depth - 1, True)
             bestValue = min(bestValue, value)
         return bestValue
@@ -343,7 +323,7 @@ color = "y"
 depth = 6
 
 StartTime = time()
-results = to_minimax(board_to_use, depth, color)
+results = getResults(board_to_use, depth, color)
 EndTime = time()
 
 print(f"Best Index: {results[1]}")
