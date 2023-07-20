@@ -7,6 +7,11 @@ import json
 # Initialisierungsfunktion
 p.init()
 
+folder_path = None
+file_path_config = f"{folder_path}/config.json"
+
+if folder_path == None:
+    exit("Geben Sie bitte einen Ordner-Pfad ein!")
 
 def isValidDirection(next_index: int, end: int, direction: str):
     """
@@ -469,10 +474,6 @@ def minimax(board: list, depth: int, maxPlayer: bool):
             bestValue = min(bestValue, value)
         # Gib den besten Wert zurück
         return bestValue
-
-folder_path = "/Users/jerykuster/Desktop/Datensammlung/Maturaarbeit_Jery"
-file_path_config = "/Users/jerykuster/Desktop/Datensammlung/Maturaarbeit_Jery/config.json"
-
 
 # Überprüfen ob es den Ordner bereits gibt
 # Wenn nicht dann einen neuen Ordner anlegen
