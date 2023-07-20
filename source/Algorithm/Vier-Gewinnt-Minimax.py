@@ -4,11 +4,11 @@ import pygame as p
 import os
 import json
 
-# Initialisierungsfunktion
-p.init()
-
 folder_path = None
 file_path_config = f"{folder_path}/config.json"
+
+# Initialisierungsfunktion
+p.init()
 
 if folder_path == None:
     exit("Geben Sie bitte einen Ordner-Pfad ein!")
