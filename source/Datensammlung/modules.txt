@@ -6,3 +6,9 @@ Module für Vier-Gewinnt.py
 - datetime -> https://docs.python.org/3/library/datetime.html
 
 -> "os", "json", "datetime" sollten bereits in Python enthalten sein.
+
+Module für Datentransfer.py
+- os -> https://docs.python.org/3/library/os.html
+- openpyxl -> (Version: 3.0.10) -> https://openpyxl.readthedocs.io/en/stable/
+
+-> "os", sollte bereits in Python enthalten sein.
