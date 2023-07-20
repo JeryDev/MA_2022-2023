@@ -46,7 +46,7 @@ Mögliche Schwierigkeiten / Probleme, welche während der Anleitung auftreten k�
   
 
 Pakete:
-→ https://github.com/JeryDev/MA_2022-2023/blob/main/source/requirements.txt
+→ https://github.com/JeryDev/MA_2022-2023/blob/main/source/Datensammlung/modules.txt
 """
 
 
@@ -240,7 +240,7 @@ def isBlunder(accuracy, maxValue, minValue, move, color):
     if color == "r" and maxValue >= 9996 and minValue < 9996 and move >= 9996:
         return 1
     # Verpasster Zug
-    if accuracy < 10 and spectrum > 250:
+    if accuracy < 10 and spectrum >= 200:
         return 1
     # Kein Blunder
     else:
@@ -344,8 +344,7 @@ def getColor(index: int, board: list):
     else:
         return "n"
 
-
-def getUnoccupiedLocations(board: list):
+def getFreePositions(board: list):
     """
     Gibt eine Liste von Indexe zurück, die auf freie Plätze auf dem Spielbrett verweisen.
 
@@ -355,15 +354,15 @@ def getUnoccupiedLocations(board: list):
     Returns:
         Eine Liste von Indexe, die auf freie Plätze auf dem Spielbrett verweisen.
     """
-    free_spaces = []
+    free_positions = []
     for i in range(7):
         for k in range(6):
             # Berechnung des Index des Elements in der aktuellen Spalte und Zeile.
             v = i + ((5 - k) * 7)
             if board[v][0] == "n":
-                free_spaces.append(v)
+                free_positions.append(v)
                 break
-    return free_spaces
+    return free_positions
 
 
 def isMiddle(index: int):
@@ -417,108 +416,97 @@ def getDirection(start: int, end: int):
     # Wenn die Richtung ungültig ist oder der nächste Index außerhalb des Spielbretts liegt, wird False zurückgegeben.
     return False
 
-
-def getAllNeighbour(index: int):
-    #get_all_neighbour
+def translateBoard(board):
     """
-    Bestimmt alle Steine, welche sich um einen bestimmten Index befinden.
+    Wandelt das Brett in ein neues Format um
 
     Args:
-        index: Der Index, an dem sich der Stein befindet.
+        board: Aktuelles Brett
 
     Returns:
-        Gibt eine Liste mit allen Indexen zurück.
+        Umgewandltes Brett
     """
-    all_neighbours = []
-    right = False
-    left = False
-    # Überprüfe, ob der Index und der Index+1 in derselben Zeile sind.
-    if index // 7 == (index + 1) // 7:
-        right = True
-    # Überprüfe, ob der Index und der Index-1 in derselben Zeile sind
-    if index // 7 == (index - 1) // 7:
-        left = True
-    # Überprüfe, ob über dem der Index eine freie Zeile ist.
-    if (index - 7) // 7 >= 0:
-        all_neighbours.append(index - 7)
-        if right == True:
-            all_neighbours.append(index - 6)
-        if left == True:
-            all_neighbours.append(index - 8)
-    # Überprüfe, ob unter dem der Index eine freie Zeile ist.
-    if (index + 7) // 7 <= 5:
-        all_neighbours.append(index + 7)
-        if right == True:
-            all_neighbours.append(index + 8)
-        if left == True:
-            all_neighbours.append(index + 6)
-    if right == True:
-        all_neighbours.append(index + 1)
-    if left == True:
-        all_neighbours.append(index - 1)
+    color_board = []
+    for i in range(len(board)):
+        color_board.append(board[i][0])
 
-    all_neighbours.sort()
-    return all_neighbours
+    translatedBoard = []
+    for i in range(6):
+        v1 = 7*i
+        v2 = 7*i+7
+        translatedBoard.append(color_board[v1:v2])
+    
+    return translatedBoard
 
-
-def analyse(board: list, position: int, color: str):
+def getScore(window: str):
     """
-    Analysiert das Spiel anhand einer Position.
+    Berechnet die Punkte
 
     Args:
-        board: Eine Liste, die das Spielbrett repräsentiert.
-        position: Ein Index, der die Position eines Steines repräsentiert.
-        color: Die Farbe des Steines
+        window: Viererreihe aus dem Board
 
     Returns:
-        Gibt einen Wert zurück, der ausgibt, wie gut eine Position ist.
+        Punkte für eine Viererreihe
     """
-    value = 0
-    all_neighbours = getAllNeighbour(position)
-    # Iteriere durch die Nachbarn des Steins
-    for neighbour in all_neighbours:
-        # Wenn die Farbe des Nachbarn nicht die gleiche ist wie die Farbe des Spielers, ignoriere ihn
-        neighbour_color = getColor(neighbour, board)
-        if neighbour_color != color:
-            continue
-        value += 10
+    countY = window.count("y")
+    countR = window.count("r")
+    countN = window.count("n")
 
-        # Wenn der Nachbar auch einen Nachbarn in der gleichen Richtung hat, erhöhe den Wert um 100
-        neighbour_2 = getDirection(position, neighbour)
-        if neighbour_2 is False:
-            continue
-
-        neighbour_2_color = getColor(neighbour_2, board)
-        if neighbour_2_color == color:
-            value += 100
-
-            # Wenn der Nachbar auch einen zweiten Nachbarn in der gleichen Richtung hat, erhöhe den Wert auf 10000
-            neighbour_3 = getDirection(neighbour, neighbour_2)
-
-            if neighbour_3 is not False:
-                neighbour_3_color = getColor(neighbour_3, board)
-
-                if neighbour_3_color == color:
-                    value = 10000
-                    break
-
-                # Wenn der Nachbar auch einen Nachbarn in der entgegengesetzten Richtung hat, erhöhe den Wert auf 10000
-                neighbour_3 = getDirection(neighbour, position)
-
-                if neighbour_3 is not False and getColor(neighbour_3, board) == color:
-                    value = 10000
-                    break
-
+    if countY + countN == 4 and countY > 0:
+        if countY == 1:
+            return 1
+        elif countY == 2:
+            return 10
+        elif countY == 3:
+            return 100
         else:
-            # Wenn der Nachbar keinen zweiten Nachbarn in der gleichen Richtung hat, aber einen in die entgegengesetzte Richtung hat, erhöhe den Wert um 100
-            neighbour_3 = getDirection(neighbour, position)
+            return 10000
+    if countR + countN == 4 and countR > 0:
+        if countR == 1:
+            return -1
+        elif countR == 2:
+            return -10
+        elif countR == 3:
+            return -100
+        else:
+            return -10000
+    return 0
 
-            if neighbour_3 is not False and getColor(neighbour_3, board) == color:
-                value += 100
-    if color == "y":
-        return value
-    else:
-        return -value
+def evaluate(board):
+    translatedBoard = translateBoard(board)
+
+    # Wertung des Spielbretts
+    score = 0
+
+    # Horizontal
+    for row in range(6):
+        for col in range(4):
+            window = translatedBoard[row][col : col + 4]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    # Vertikal
+    for col in range(7):
+        for row in range(3):
+            window = [translatedBoard[row + i][col] for i in range(4)]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    # Diagonal (von links oben nach rechts unten)
+    for row in range(3):
+        for col in range(4):
+            window = [translatedBoard[row + i][col + i] for i in range(4)]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    # Diagonal (von rechts oben nach links unten)
+    for row in range(3):
+        for col in range(3, 7):
+            window = [translatedBoard[row + i][col - i] for i in range(4)]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    return score
 
 
 def checkWin(board: list):
@@ -533,7 +521,6 @@ def checkWin(board: list):
         red: Rot hat gewonnen.
         None: Niemand hat gewonnen.
     """
-    won = None
 
     # Überprüfung der horizontalen Gewinnbedingung
     for row in range(6):
@@ -591,7 +578,7 @@ def checkWin(board: list):
                     else:
                         return "red"
 
-    return won
+    return None
 
 
 def makeMove(board: list, move: int, color: str):
@@ -638,18 +625,18 @@ def getResults(board: list, depth: int, color: str, alpha: int, beta: int):
     results = []
 
     # Durchlaufe alle freien Positionen auf dem Spielbrett
-    for position in getUnoccupiedLocations(board):
+    for position in getFreePositions(board):
         # Führe den Spielzug aus und berechne den Bewertungswert des Spielbretts
         newBoard = makeMove(board, position, color)
         if color == "y":
             maxPlayer = False
-            value = minimax(newBoard, position, depth - 1, maxPlayer, alpha, beta)
+            value = minimax(newBoard, depth - 1, maxPlayer, alpha, beta)
             # Füge einen Bonus hinzu, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
             if isMiddle(position):
                 value = value + 4
         elif color == "r":
             maxPlayer = True
-            value = minimax(newBoard, position, depth - 1, maxPlayer, alpha, beta)
+            value = minimax(newBoard, depth - 1, maxPlayer, alpha, beta)
             # Ziehe einen Malus ab, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
             if isMiddle(position):
                 value = value - 4
@@ -668,7 +655,7 @@ def getResults(board: list, depth: int, color: str, alpha: int, beta: int):
 
 
 def minimax(
-    board: list, position: int, depth: int, maxPlayer: bool, alpha: int, beta: int
+    board: list, depth: int, maxPlayer: bool, alpha: int, beta: int
 ):
     """
     Ein Algorithmus, der den bestmöglichen Spielzug in einer Connect-4-Partie findet.
@@ -686,29 +673,26 @@ def minimax(
     """
 
     # Wenn die maximale Tiefe erreicht wurde oder das Spiel gewonnen wurde
-    if depth == 0 or checkWin(board) != None:
+    winner = checkWin(board)
+    if depth == 0 or winner != None:
         # Falls Gelb gewonnen hat, gib 10000 zurück
-        if checkWin(board) == "yellow":
+        if winner == "yellow":
             return 10000
         # Falls Rot gewonnen hat, gib -10000 zurück
-        elif checkWin(board) == "red":
+        elif winner == "red":
             return -10000
         # Falls die maximale Tiefe erreicht wurde, berechne den Wert des aktuellen Boards und gib ihn zurück
-        if depth == 0:
-            if maxPlayer:
-                return analyse(board, position, "r")
-            else:
-                return analyse(board, position, "y")
+        return evaluate(board)
 
     # Wenn der maximierende Spieler am Zug ist
     if maxPlayer:
         bestValue = -1000000
         # Für jeden möglichen Zug
-        for move in getUnoccupiedLocations(board):
+        for move in getFreePositions(board):
             # Mach den Zug auf dem Board
             newBoard = makeMove(board, move, "y")
             # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
-            value = minimax(newBoard, move, depth - 1, False, alpha, beta)
+            value = minimax(newBoard, depth - 1, False, alpha, beta)
             # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
             bestValue = max(bestValue, value)
             # Aktualisiere den Alpha-Wert
@@ -723,11 +707,11 @@ def minimax(
     else:
         bestValue = 1000000
         # Für jeden möglichen Zug
-        for move in getUnoccupiedLocations(board):
+        for move in getFreePositions(board):
             # Mach den Zug auf dem Board
             newBoard = makeMove(board, move, "r")
             # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
-            value = minimax(newBoard, move, depth - 1, True, alpha, beta)
+            value = minimax(newBoard, depth - 1, True, alpha, beta)
             # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
             bestValue = min(bestValue, value)
             # Aktualisiere den Beta-Wert
@@ -739,8 +723,16 @@ def minimax(
         return bestValue
 
 
-# Int wird in einen gültigen String umgewandelt
 def moveSyntax(move: int):
+    """
+    Wandelt in ein gültiges Stringformat um
+
+    Args:
+        move: Repräsentiert den Zug
+
+    Returns:
+        Umgewandeltes Stringformat
+    """
     if move < 10:
         move = "0" + str(move)
         return move
