@@ -8,4 +8,4 @@ Module für AlphaBeta-vs-User.py
 Module für AlphaBeta.py
 - time -> https://docs.python.org/3/library/time.html
 
--> "time" sollten bereits in Python enthalten sein.
+-> "time" sollte bereits in Python enthalten sein.
