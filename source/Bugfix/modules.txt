@@ -1,0 +1,2 @@
+Module für converter.py
+- openpyxl -> (Version: 3.0.10) -> https://openpyxl.readthedocs.io/en/stable/
