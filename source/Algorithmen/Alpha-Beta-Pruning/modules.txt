@@ -3,5 +3,9 @@ Module für AlphaBeta-vs-User.py
 - os -> https://docs.python.org/3/library/os.html
 - json -> https://docs.python.org/3/library/json.html
 
+-> "os", "json" sollten bereits in Python enthalten sein.
+
 Module für AlphaBeta.py
 - time -> https://docs.python.org/3/library/time.html
+
+-> "time" sollten bereits in Python enthalten sein.
