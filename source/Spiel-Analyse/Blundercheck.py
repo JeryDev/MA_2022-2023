@@ -7,8 +7,8 @@ import openpyxl as xl
 p.init()
 
 # Pfade für die nötigen Dateien
-file_path_xlsx = "/Users/jerykuster/Desktop/Datensammlung/Maturaarbeit_Jery/data.xlsx"
-file_path_config = "/Users/jerykuster/Desktop/Datensammlung/Maturaarbeit_Jery/config.json"
+file_path_xlsx = "Pfad der Datendatei"
+file_path_config = f"{file_path_xlsx}/config.json"
 
 # Titel der Mappe -> Format: Spieler1 vs Spieler2
 # sheet_name = str(input("Geben Sie einen Titel ein: "))
