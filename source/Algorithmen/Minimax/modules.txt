@@ -3,5 +3,9 @@ Module für Minimax-vs-User.py
 - os -> https://docs.python.org/3/library/os.html
 - json -> https://docs.python.org/3/library/json.html
 
+-> "os", "json" sollten bereits in Python enthalten sein.
+
 Module für Minimax.py
 - time -> https://docs.python.org/3/library/time.html
+
+-> "time" sollte bereits in Python enthalten sein.
