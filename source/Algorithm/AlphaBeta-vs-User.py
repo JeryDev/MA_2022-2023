@@ -1,17 +1,20 @@
-# Vier-Gewinnt Python-Programm (pygame) gegen Alpha-Beta (minimax) von Jery:
+# Vier-Gewinnt gegen Minimax-Algorithmus Python-Programm (pygame) von Jery:
+
 import pygame as p
+import os
+import json
 
-# Den "Size" Parameter setzen
-size = 800
+folder_path = None
+file_path_config = f"{folder_path}/config.json"
 
-# Suchtiefe des Algorithmus
-depth = 7
+if folder_path == None:
+    exit("Geben Sie bitte einen Ordner-Pfad ein!")
 
 # Initialisierungsfunktion
 p.init()
 
 
-def is_valid_direction(next_index: int, end: int, direction: str):
+def isValidDirection(next_index: int, end: int, direction: str):
     """
     Überprüft, ob ein Index in der gegebenen Richtung gültig ist, wenn er als
     nächstes besucht wird.
@@ -25,45 +28,45 @@ def is_valid_direction(next_index: int, end: int, direction: str):
         True, wenn der nächste Index in der gegebenen Richtung gültig ist, andernfalls False.
     """
     if direction == "vertical":
-        if get_row(end) + 1 == get_row(next_index):
+        if getRow(end) + 1 == getRow(next_index):
             # Der nächste Index ist eine Zeile darunter
             return True
-        elif get_row(end) - 1 == get_row(next_index):
+        elif getRow(end) - 1 == getRow(next_index):
             # Der nächste Index ist eine Zeile darüber
             return True
     elif direction == "horizontal":
-        if get_column(end) + 1 == get_column(next_index):
+        if getColumn(end) + 1 == getColumn(next_index):
             # Der nächste Index ist eine Spalte rechts
             return True
-        elif get_column(end) - 1 == get_column(next_index):
+        elif getColumn(end) - 1 == getColumn(next_index):
             # Der nächste Index ist eine Spalte links
             return True
     elif direction == "diagonal":
-        if get_row(end) + 1 == get_row(next_index) and get_column(
-            end
-        ) + 1 == get_column(next_index):
+        if getRow(end) + 1 == getRow(next_index) and getColumn(end) + 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal unten rechts
             return True
-        elif get_row(end) - 1 == get_row(next_index) and get_column(
-            end
-        ) - 1 == get_column(next_index):
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(end) - 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal oben links
             return True
-        elif get_row(end) + 1 == get_row(next_index) and get_column(
-            end
-        ) - 1 == get_column(next_index):
+        elif getRow(end) + 1 == getRow(next_index) and getColumn(end) - 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal unten links
             return True
-        elif get_row(end) - 1 == get_row(next_index) and get_column(
-            end
-        ) + 1 == get_column(next_index):
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(end) + 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal oben rechts
             return True
     # Der nächste Index ist in keiner der erlaubten Richtungen gültig.
     return False
 
 
-def get_row(index: int):
+def getRow(index: int):
     """
     Gibt die Zeile zurück, in der sich der gegebene Index befindet.
 
@@ -76,7 +79,7 @@ def get_row(index: int):
     return index // 7 + 1
 
 
-def get_column(index: int):
+def getColumn(index: int):
     """
     Gibt die Spalte zurück, in der sich der gegebene Index befindet.
 
@@ -89,7 +92,7 @@ def get_column(index: int):
     return index % 7 + 1
 
 
-def get_Color(index: int, board: list):
+def getColor(index: int, board: list):
     """
     Gibt die Farbe des Steins am gegebenen Index auf dem gegebenen Spielbrett zurück.
 
@@ -109,7 +112,7 @@ def get_Color(index: int, board: list):
         return "n"
 
 
-def get_free_spaces(board: list):
+def getFreePositions(board: list):
     """
     Gibt eine Liste von Indexe zurück, die auf freie Plätze auf dem Spielbrett verweisen.
 
@@ -119,18 +122,18 @@ def get_free_spaces(board: list):
     Returns:
         Eine Liste von Indexe, die auf freie Plätze auf dem Spielbrett verweisen.
     """
-    free_spaces = []
+    free_positions = []
     for i in range(7):
         for k in range(6):
             # Berechnung des Index des Elements in der aktuellen Spalte und Zeile.
             v = i + ((5 - k) * 7)
             if board[v][0] == "n":
-                free_spaces.append(v)
+                free_positions.append(v)
                 break
-    return free_spaces
+    return free_positions
 
 
-def check_middle_position(index: int):
+def isMiddle(index: int):
     """
     Überprüft, ob der gegebene Index in der Mitte auf dem Spielbrett ist.
 
@@ -156,7 +159,7 @@ DIRECTION_LOOKUP = {
 }
 
 
-def get_direction(start: int, end: int):
+def getDirection(start: int, end: int):
     """
     Bestimmt die Richtung basierend auf dem Start- und Endindex.
 
@@ -176,115 +179,108 @@ def get_direction(start: int, end: int):
         # Der nächste Index in der berechneten Richtung wird berechnet.
         next_index = end + row_diff * 7 + col_diff
         # Überprüfung, ob der nächste Index in der berechneten Richtung gültig ist und innerhalb des Spielbretts liegt.
-        if is_valid_direction(next_index, end, direction) and 0 <= next_index <= 41:
+        if isValidDirection(next_index, end, direction) and 0 <= next_index <= 41:
             return next_index  # Der nächste Index wird zurückgegeben.
     # Wenn die Richtung ungültig ist oder der nächste Index außerhalb des Spielbretts liegt, wird False zurückgegeben.
     return False
 
 
-def get_all_neighbours(index: int):
+def translateBoard(board):
     """
-    Bestimmt alle Steine, welche sich um einen bestimmten Index befinden.
+    Wandelt das Brett in ein neues Format um
 
     Args:
-        index: Der Index, an dem sich der Stein befindet.
+        board: Aktuelles Brett
 
     Returns:
-        Gibt eine Liste mit allen Indexen zurück.
+        Umgewandltes Brett
     """
-    all_neighbours = []
-    right = False
-    left = False
-    # Überprüfe, ob der Index und der Index+1 in derselben Zeile sind.
-    if index // 7 == (index + 1) // 7:
-        right = True
-    # Überprüfe, ob der Index und der Index-1 in derselben Zeile sind
-    if index // 7 == (index - 1) // 7:
-        left = True
-    # Überprüfe, ob über dem der Index eine freie Zeile ist.
-    if (index - 7) // 7 >= 0:
-        all_neighbours.append(index - 7)
-        if right == True:
-            all_neighbours.append(index - 6)
-        if left == True:
-            all_neighbours.append(index - 8)
-    # Überprüfe, ob unter dem der Index eine freie Zeile ist.
-    if (index + 7) // 7 <= 5:
-        all_neighbours.append(index + 7)
-        if right == True:
-            all_neighbours.append(index + 8)
-        if left == True:
-            all_neighbours.append(index + 6)
-    if right == True:
-        all_neighbours.append(index + 1)
-    if left == True:
-        all_neighbours.append(index - 1)
+    rl = []
+    for i in range(len(board)):
+        rl.append(board[i][0])
 
-    all_neighbours.sort()
-    return all_neighbours
+    tl = []
+    for i in range(6):
+        v1 = 7 * i
+        v2 = 7 * i + 7
+        tl.append(rl[v1:v2])
+
+    return tl
 
 
-def analyse(board: list, position: int, color: str):
+def getScore(window: str):
     """
-    Analysiert das Spiel anhand einer Position.
+    Berechnet die Punkte
 
     Args:
-        board: Eine Liste, die das Spielbrett repräsentiert.
-        position: Ein Index, der die Position eines Steines repräsentiert.
-        color: Die Farbe des Steines
+        window: Viererreihe aus dem Board
 
     Returns:
-        Gibt einen Wert zurück, der ausgibt, wie gut eine Position ist.
+        Punkte
     """
-    value = 0
-    all_neighbours = get_all_neighbours(position)
-    # Iteriere durch die Nachbarn des Steins
-    for neighbour in all_neighbours:
-        # Wenn die Farbe des Nachbarn nicht die gleiche ist wie die Farbe des Spielers, ignoriere ihn
-        neighbour_color = get_Color(neighbour, board)
-        if neighbour_color != color:
-            continue
-        value += 10
+    countY = window.count("y")
+    countR = window.count("r")
+    countN = window.count("n")
 
-        # Wenn der Nachbar auch einen Nachbarn in der gleichen Richtung hat, erhöhe den Wert um 100
-        neighbour_2 = get_direction(position, neighbour)
-        if neighbour_2 is False:
-            continue
-
-        neighbour_2_color = get_Color(neighbour_2, board)
-        if neighbour_2_color == color:
-            value += 100
-
-            # Wenn der Nachbar auch einen zweiten Nachbarn in der gleichen Richtung hat, erhöhe den Wert auf 10000
-            neighbour_3 = get_direction(neighbour, neighbour_2)
-
-            if neighbour_3 is not False:
-                neighbour_3_color = get_Color(neighbour_3, board)
-
-                if neighbour_3_color == color:
-                    value = 10000
-                    break
-
-                # Wenn der Nachbar auch einen Nachbarn in der entgegengesetzten Richtung hat, erhöhe den Wert auf 10000
-                neighbour_3 = get_direction(neighbour, position)
-
-                if neighbour_3 is not False and get_Color(neighbour_3, board) == color:
-                    value = 10000
-                    break
-
+    if countY + countN == 4 and countY > 0:
+        if countY == 1:
+            return 1
+        elif countY == 2:
+            return 10
+        elif countY == 3:
+            return 100
         else:
-            # Wenn der Nachbar keinen zweiten Nachbarn in der gleichen Richtung hat, aber einen in die entgegengesetzte Richtung hat, erhöhe den Wert um 100
-            neighbour_3 = get_direction(neighbour, position)
+            return 10000
+    if countR + countN == 4 and countR > 0:
+        if countR == 1:
+            return -1
+        elif countR == 2:
+            return -10
+        elif countR == 3:
+            return -100
+        else:
+            return -10000
+    return 0
 
-            if neighbour_3 is not False and get_Color(neighbour_3, board) == color:
-                value += 100
-    if color == "y":
-        return value
-    else:
-        return -value
+
+def evaluate(board):
+    translatedBoard = translateBoard(board)
+
+    # Wertung des Spielbretts
+    score = 0
+
+    # Horizontal
+    for row in range(6):
+        for col in range(4):
+            window = translatedBoard[row][col : col + 4]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    # Vertikal
+    for col in range(7):
+        for row in range(3):
+            window = [translatedBoard[row + i][col] for i in range(4)]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    # Diagonal (von links oben nach rechts unten)
+    for row in range(3):
+        for col in range(4):
+            window = [translatedBoard[row + i][col + i] for i in range(4)]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    # Diagonal (von rechts oben nach links unten)
+    for row in range(3):
+        for col in range(3, 7):
+            window = [translatedBoard[row + i][col - i] for i in range(4)]
+            window_string = "".join(window)
+            score += getScore(window_string)
+
+    return score
 
 
-def check_win(board: list):
+def checkWin(board: list):
     """
     Überprüft ob jemand gewonnen hat
 
@@ -296,7 +292,6 @@ def check_win(board: list):
         red: Rot hat gewonnen.
         None: Niemand hat gewonnen.
     """
-    won = None
 
     # Überprüfung der horizontalen Gewinnbedingung
     for row in range(6):
@@ -354,10 +349,10 @@ def check_win(board: list):
                     else:
                         return "red"
 
-    return won
+    return None
 
 
-def make_move(board: list, move: int, color: str):
+def makeMove(board: list, move: int, color: str):
     """
     Führt einen Spielzug durch, indem ein Stein des Spielers auf dem Spielbrett platziert wird.
 
@@ -378,7 +373,7 @@ def make_move(board: list, move: int, color: str):
     return newBoard
 
 
-def to_minimax(board: list, depth: int, color: str, alpha: int, beta: int):
+def getResults(board: list, depth: int, color: str, alpha: int, beta: int):
     """
     Wandelt das Spielbrett in ein Format um, das von der Minimax-Funktion verwendet werden kann.
 
@@ -401,46 +396,36 @@ def to_minimax(board: list, depth: int, color: str, alpha: int, beta: int):
     results = []
 
     # Durchlaufe alle freien Positionen auf dem Spielbrett
-    for position in get_free_spaces(board):
+    for position in getFreePositions(board):
         # Führe den Spielzug aus und berechne den Bewertungswert des Spielbretts
-        newBoard = make_move(board, position, color)
+        newBoard = makeMove(board, position, color)
         if color == "y":
             maxPlayer = False
-            value = minimax(newBoard, position, depth - 1, maxPlayer, alpha, beta)
+            value = minimax(newBoard, depth - 1, maxPlayer, alpha, beta)
             # Füge einen Bonus hinzu, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
-            if check_middle_position(position):
+            if isMiddle(position):
                 value = value + 4
         elif color == "r":
             maxPlayer = True
-            value = minimax(newBoard, position, depth - 1, maxPlayer, alpha, beta)
+            value = minimax(newBoard, depth - 1, maxPlayer, alpha, beta)
             # Ziehe einen Malus ab, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
-            if check_middle_position(position):
+            if isMiddle(position):
                 value = value - 4
 
         # Füge den Bewertungswert des Spielzugs und seine Position der Ergebnisliste hinzu
         results.append([value, position])
 
-    # Gib die Ergebnisliste basierend auf der Farbe des Spielers zurück
-    if color == "y":
-        max = [-1000000, None]
-        for res in results:
-            if res[0] >= max[0]:
-                max = res
-        return max
-
-    if color == "r":
-        min = [1000000, None]
-        for res in results:
-            if res[0] <= min[0]:
-                min = res
-        return min
-
-    return results
+    # Gibt die Ergebnisliste zurück
+    values = []
+    for i in range(len(results)):
+        values.append(results[i][0])
+    positions = []
+    for i in range(len(results)):
+        positions.append(results[i][1])
+    return values, positions
 
 
-def minimax(
-    board: list, position: int, depth: int, maxPlayer: bool, alpha: int, beta: int
-):
+def minimax(board: list, depth: int, maxPlayer: bool, alpha: int, beta: int):
     """
     Ein Algorithmus, der den bestmöglichen Spielzug in einer Connect-4-Partie findet.
 
@@ -457,29 +442,26 @@ def minimax(
     """
 
     # Wenn die maximale Tiefe erreicht wurde oder das Spiel gewonnen wurde
-    if depth == 0 or check_win(board) != None:
+    winner = checkWin(board)
+    if depth == 0 or winner != None:
         # Falls Gelb gewonnen hat, gib 10000 zurück
-        if check_win(board) == "yellow":
+        if winner == "yellow":
             return 10000
         # Falls Rot gewonnen hat, gib -10000 zurück
-        elif check_win(board) == "red":
+        elif winner == "red":
             return -10000
         # Falls die maximale Tiefe erreicht wurde, berechne den Wert des aktuellen Boards und gib ihn zurück
-        if depth == 0:
-            if maxPlayer:
-                return analyse(board, position, "r")
-            else:
-                return analyse(board, position, "y")
+        return evaluate(board)
 
     # Wenn der maximierende Spieler am Zug ist
     if maxPlayer:
         bestValue = -1000000
         # Für jeden möglichen Zug
-        for move in get_free_spaces(board):
+        for move in getFreePositions(board):
             # Mach den Zug auf dem Board
-            newBoard = make_move(board, move, "y")
+            newBoard = makeMove(board, move, "y")
             # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
-            value = minimax(newBoard, move, depth - 1, False, alpha, beta)
+            value = minimax(newBoard, depth - 1, False, alpha, beta)
             # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
             bestValue = max(bestValue, value)
             # Aktualisiere den Alpha-Wert
@@ -494,11 +476,11 @@ def minimax(
     else:
         bestValue = 1000000
         # Für jeden möglichen Zug
-        for move in get_free_spaces(board):
+        for move in getFreePositions(board):
             # Mach den Zug auf dem Board
-            newBoard = make_move(board, move, "r")
+            newBoard = makeMove(board, move, "r")
             # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
-            value = minimax(newBoard, move, depth - 1, True, alpha, beta)
+            value = minimax(newBoard, depth - 1, True, alpha, beta)
             # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
             bestValue = min(bestValue, value)
             # Aktualisiere den Beta-Wert
@@ -509,6 +491,29 @@ def minimax(
         # Gib den besten Wert zurück
         return bestValue
 
+
+# Überprüfen ob es den Ordner bereits gibt
+# Wenn nicht dann einen neuen Ordner anlegen
+if not os.path.isdir(folder_path):
+    os.mkdir(folder_path)
+
+# Überprüfen ob es die Konfigurationsdatei bereits gibt
+# Wenn nicht dann einen neuen Datei anlegen mit Standardwert
+if not os.path.isfile(file_path_config):
+    data = {"size": 1050}
+    with open(file_path_config, "w") as file:
+        json.dump(data, file, indent=1)
+
+
+# Die Konfigurationsdatei öffnen
+f = open(file_path_config)
+
+# Konfigurationsdatei in ein Dictionary umwandeln
+data = json.load(f)
+
+# Den "Size" Parameter abrufen
+size = data["size"]
+f.close()
 
 # Grösse von einem Feld bestimmen
 sizeOne = int(size / 7)
@@ -538,7 +543,16 @@ move = 0
 # Int wird in einen gültigen String umgewandelt
 
 
-def moveSyntax(move):
+def moveSyntax(move: int):
+    """
+    Wandelt in ein gültiges Stringformat um
+
+    Args:
+        move: Repräsentiert den Zug
+
+    Returns:
+        Umgewandeltes Stringformat
+    """
     if move < 10:
         move = "0" + str(move)
         return move
@@ -547,8 +561,6 @@ def moveSyntax(move):
 
 
 # Die Spielfläche wird gezeichnet
-
-
 def drawGame():
     for i in range(8):
         p.draw.line(
@@ -611,121 +623,58 @@ while online:
 
         # Das Fenster wird neugeladen
         p.display.update()
-        if len(occupied) == len(board):
-            player = None
-            font = p.font.Font("freesansbold.ttf", 32)
-            text = font.render("Unentschieden!", True, (0, 255, 0), (0, 0, 255))
-            textRect = text.get_rect()
-            textRect.center = (180, height // 20)
-            screen.blit(text, textRect)
-            text = font.render("Neustarten", True, (0, 255, 0), (0, 0, 255))
-            textRect = text.get_rect()
-            textRect.center = (width - 110, height // 20)
-            screen.blit(text, textRect)
-
-        if player == False:
-            result = to_minimax(board, depth, "r", -1000000, 1000000)
-            occupied.append(result[1])
-            board[result[1]] = f"r{moveSyntax(move)}"
-            column = get_column(result[1]) - 1
-            row = get_row(result[1]) - 1
-            x = column * sizeOne + (sizeOne / 2)
-            y = row * sizeOne + (sizeOne * 1.5)
-            drawBall(x, y)
-            move = move + 1
-            status = check_win(board)
-            if played and not player:
-                if not status:
-                    player = True
-                    rect =  p.draw.rect(screen, [0, 0, 0], (width/2 - 75, height//20 - 20, 150, 40))
-                    p.display.update()
-
-                else:
-                    rect =  p.draw.rect(screen, [0, 0, 0], (width/2 - 75, height//20 - 20, 150, 40))
-                    p.display.update()
-                    # Erster Parameter bestimmt die Schriftart
-                    # Zweiter Parameter bestimmt die Schriftgrösse
-                    font = p.font.Font("freesansbold.ttf", 32)
-
-                    if player:
-                        # Text und koordinaten werden bestimmt
-                        text = font.render(
-                            "Gelb hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
-                        )
-                        textRect = text.get_rect()
-                        textRect.center = (180, height // 20)
-                    else:
-                        # Text und koordinaten werden bestimmt
-                        text = font.render(
-                            "Rot hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
-                        )
-                        textRect = text.get_rect()
-                        textRect.center = (160, height // 20)
-
-                    # player wird auf None gesetzt, damit man nicht mehr setzen kann.
-                    player = None
-                    # Text wird gesetzt
-                    screen.blit(text, textRect)
-
-                    text = font.render("Neustarten", True, (0, 255, 0), (0, 0, 255))
-                    textRect = text.get_rect()
-                    textRect.center = (width - 110, height // 20)
-                    screen.blit(text, textRect)
-
-                if player is None:
-                    position = p.mouse.get_pos()
-                    # Es wird überprüft wo ob man auf "Neustarten" gedürckt hat
-                    if textRect.x <= position[0] <= textRect.x + textRect.size[0]:
-                        if textRect.y <= position[1] <= textRect.y + textRect.size[1]:
-                            # Alle Werte werden zurückgesetzt, damit das Spiel von vorne beginnt
-                            occupied = []
-                            board = []
-                            for n in range(42):
-                                board.append("nnn")
-
-                            move = 0
-                            screen.fill(p.Color(0, 0, 0))
-                            player = True
-
         if event.type == p.MOUSEBUTTONDOWN:
-            if player:
+            if player is not None:
                 # In played wird gespeichert ob jemand gesetzt hat.
-                played = put(p.mouse.get_pos()[0] // sizeOne)
+                column = p.mouse.get_pos()[0] // sizeOne
+                played = put(column)
                 # Spielzug wird um 1 erhöht
                 move = move + 1
                 # In status wird gespeichert ob jemand gewonnen hat.
-                status = check_win(board)
-            if played and player:
-                if not status:
-                    if player:
-                        # Spieler wird gewechselt
-                        player = False
-                        font = p.font.Font("freesansbold.ttf", 32)
-                        wait = font.render("Warten!", True, (0, 255, 0), (0, 0, 255))
-                        waitRect = wait.get_rect()
-                        waitRect.center = (width / 2, height // 20)
-                        screen.blit(wait, waitRect)
-                    else:
-                        # Spieler wird gewechselt
-                        player = True
+                status = checkWin(board)
+                if len(occupied) == 42:
+                    draw = True
+                else:
+                    draw = False
+
+            if played and player is not None:
+                if not status and not draw:
+                    p.draw.rect(
+                        screen,
+                        [0, 0, 0],
+                        (width / 2 - 75, height // 20 - 20, 150, 40),
+                    )
+                    player = False
+                    p.display.update()
 
                 # Jemand hat gewonnen
                 else:
+                    p.draw.rect(
+                        screen, [0, 0, 0], (width / 2 - 75, height // 20 - 20, 150, 40)
+                    )
                     # Erster Parameter bestimmt die Schriftart
                     # Zweiter Parameter bestimmt die Schriftgrösse
                     font = p.font.Font("freesansbold.ttf", 32)
 
-                    if player:
-                        # Text und koordinaten werden bestimmt
-                        text = font.render(
-                            "Gelb hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
-                        )
-                        textRect = text.get_rect()
-                        textRect.center = (180, height // 20)
+                    if not draw:
+                        if player:
+                            # Text und koordinaten werden bestimmt
+                            text = font.render(
+                                "Gelb hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
+                            )
+                            textRect = text.get_rect()
+                            textRect.center = (180, height // 20)
+                        else:
+                            # Text und koordinaten werden bestimmt
+                            text = font.render(
+                                "Rot hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
+                            )
+                            textRect = text.get_rect()
+                            textRect.center = (160, height // 20)
                     else:
                         # Text und koordinaten werden bestimmt
                         text = font.render(
-                            "Rot hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
+                            "Unentschieden!", True, (0, 255, 0), (0, 0, 255)
                         )
                         textRect = text.get_rect()
                         textRect.center = (160, height // 20)
@@ -745,7 +694,7 @@ while online:
                 # Es wird überprüft wo ob man auf "Neustarten" gedürckt hat
                 if textRect.x <= position[0] <= textRect.x + textRect.size[0]:
                     if textRect.y <= position[1] <= textRect.y + textRect.size[1]:
-                        # Alle Werte werden zurückgesetzt, damit das Spiel von vorne beginnt
+                        # Alle Werte werden zurückgesetzt
                         occupied = []
                         board = []
                         for n in range(42):
@@ -754,6 +703,75 @@ while online:
                         screen.fill(p.Color(0, 0, 0))
                         player = True
 
+        if player == False:
+            values, positions = getResults(board, 7, "r", -1000000, 1000000)
+            index = positions[values.index(min(values))]
+            if player is not None:
+                # In played wird gespeichert ob jemand gesetzt hat.
+                column = getColumn(index) - 1
+                played = put(column)
+                # Spielzug wird um 1 erhöht
+                move = move + 1
+                # In status wird gespeichert ob jemand gewonnen hat.
+                status = checkWin(board)
+                if len(occupied) == 42:
+                    draw = True
+                else:
+                    draw = False
+
+            if played and player is not None:
+                if not status and not draw:
+                    # Spieler wird gewechselt
+                    p.draw.rect(
+                        screen,
+                        [0, 0, 0],
+                        (width / 2 - 75, height // 20 - 20, 150, 40),
+                    )
+                    player = True
+
+                # Jemand hat gewonnen
+                else:
+                    p.draw.rect(
+                        screen, [0, 0, 0], (width / 2 - 75, height // 20 - 20, 150, 40)
+                    )
+                    # Erster Parameter bestimmt die Schriftart
+                    # Zweiter Parameter bestimmt die Schriftgrösse
+                    font = p.font.Font("freesansbold.ttf", 32)
+
+                    if not draw:
+                        if player:
+                            # Text und koordinaten werden bestimmt
+                            text = font.render(
+                                "Gelb hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
+                            )
+                            textRect = text.get_rect()
+                            textRect.center = (180, height // 20)
+                        else:
+                            # Text und koordinaten werden bestimmt
+                            text = font.render(
+                                "Rot hat gewonnen!", True, (0, 255, 0), (0, 0, 255)
+                            )
+                            textRect = text.get_rect()
+                            textRect.center = (160, height // 20)
+                    else:
+                        # Text und koordinaten werden bestimmt
+                        text = font.render(
+                            "Unentschieden!", True, (0, 255, 0), (0, 0, 255)
+                        )
+                        textRect = text.get_rect()
+                        textRect.center = (160, height // 20)
+
+                    # player wird auf None gesetzt, damit man nicht mehr setzen kann.
+                    player = None
+                    # Text wird gesetzt
+                    screen.blit(text, textRect)
+
+                    text = font.render("Neustarten", True, (0, 255, 0), (0, 0, 255))
+                    textRect = text.get_rect()
+                    textRect.center = (width - 110, height // 20)
+                    screen.blit(text, textRect)
+
         # Das Feld wird gezeichnet
         drawGame()
+
 p.quit()
