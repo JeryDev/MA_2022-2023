@@ -1,0 +1,7 @@
+Module für Blundercheck.py
+- pygame (Version: 2.1.3.dev8) -> https://www.pygame.org/news
+- os -> https://docs.python.org/3/library/os.html
+- json -> https://docs.python.org/3/library/json.html
+- openpyxl -> (Version: 3.0.10) -> https://openpyxl.readthedocs.io/en/stable/
+
+-> "os", "json" sollten bereits in Python enthalten sein.
