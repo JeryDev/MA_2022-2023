@@ -162,91 +162,6 @@ for n in range(42):
 move = 0
 
 
-def difference(num1: int, num2: int):
-    """
-    Berechnet die Differenz von zwei Zahlen
-
-    Args:
-        num1: Erste Zahl
-        num2: Zweite Zahl
-
-    Returns:
-        diff: Differenz der Zahlen
-    """
-    if num1 > num2:
-        diff = num1 - num2
-    else:
-        diff = num2 - num1
-
-    return diff
-
-
-def getAccuracy(move: int, maxValue: int, minValue: int, color: str):
-    """
-    Überprüft die Qualität des Zuges
-
-    Args:
-        move: Repräsentiert den Wert des Zuges
-        best: Repräsentiert den bestmöglichen Wert
-        worst: Repräsentiert den schlechtesten Wert
-
-    Returns:
-        accuracy: Qualität des Zuges
-    """
-    if color == "y":
-        spectrum = difference(maxValue, minValue)
-        value = difference(move, minValue)
-        if spectrum > 0:
-            accuracy = 100 / spectrum * value
-        else:
-            accuracy = 100
-        return round(accuracy, 1)
-    elif color == "r":
-        spectrum = difference(maxValue, minValue)
-        value = difference(move, maxValue)
-        if spectrum > 0:
-            accuracy = 100 / spectrum * value
-        else:
-            accuracy = 100
-        return round(accuracy, 1)
-
-
-def isBlunder(accuracy, maxValue, minValue, move, color):
-    """
-    Überpüft, ob ein Zug ein Blunder ist
-
-    Args:
-        accuracy: Die Qualität des Zuges in Prozent
-        maxValue: Der grösste Wert von allen möglichen Zügen
-        minValue: Der kleinste Wert von allen möglichen Zügen
-        move: Repräsentiert den Wert des Zuges (Nicht in Prozent)
-
-    Returns:
-        0: Kein Blunder
-        1: Blunder
-    """
-    spectrum = difference(maxValue, minValue)
-
-    # Verpasster Gewinn (Gelb)
-    if color == "y" and maxValue >= 9996 and move < 9996:
-        return 1
-    # Verpasster Gewinn (Rot)
-    if color == "r" and minValue <= -9996 and move > -9996:
-        return 1
-    # Gewinnchance für Rot
-    if color == "y" and minValue <= -9996 and maxValue > -9996 and move <= -9996:
-        return 1
-    # Gewinnchance für Gelb
-    if color == "r" and maxValue >= 9996 and minValue < 9996 and move >= 9996:
-        return 1
-    # Verpasster Zug
-    if accuracy < 10 and spectrum >= 200:
-        return 1
-    # Kein Blunder
-    else:
-        return 0
-
-
 def isValidDirection(next_index: int, end: int, direction: str):
     """
     Überprüft, ob ein Index in der gegebenen Richtung gültig ist, wenn er als
@@ -275,24 +190,24 @@ def isValidDirection(next_index: int, end: int, direction: str):
             # Der nächste Index ist eine Spalte links
             return True
     elif direction == "diagonal":
-        if getRow(end) + 1 == getRow(next_index) and getColumn(
-            end
-        ) + 1 == getColumn(next_index):
+        if getRow(end) + 1 == getRow(next_index) and getColumn(end) + 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal unten rechts
             return True
-        elif getRow(end) - 1 == getRow(next_index) and getColumn(
-            end
-        ) - 1 == getColumn(next_index):
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(end) - 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal oben links
             return True
-        elif getRow(end) + 1 == getRow(next_index) and getColumn(
-            end
-        ) - 1 == getColumn(next_index):
+        elif getRow(end) + 1 == getRow(next_index) and getColumn(end) - 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal unten links
             return True
-        elif getRow(end) - 1 == getRow(next_index) and getColumn(
-            end
-        ) + 1 == getColumn(next_index):
+        elif getRow(end) - 1 == getRow(next_index) and getColumn(end) + 1 == getColumn(
+            next_index
+        ):
             # Der nächste Index ist diagonal oben rechts
             return True
     # Der nächste Index ist in keiner der erlaubten Richtungen gültig.
@@ -344,7 +259,7 @@ def getColor(index: int, board: list):
     else:
         return "n"
 
-def getFreePositions(board: list):
+def getUnoccupiedLocations(board: list):
     """
     Gibt eine Liste von Indexe zurück, die auf freie Plätze auf dem Spielbrett verweisen.
 
@@ -354,15 +269,15 @@ def getFreePositions(board: list):
     Returns:
         Eine Liste von Indexe, die auf freie Plätze auf dem Spielbrett verweisen.
     """
-    free_positions = []
+    free_spaces = []
     for i in range(7):
         for k in range(6):
             # Berechnung des Index des Elements in der aktuellen Spalte und Zeile.
             v = i + ((5 - k) * 7)
             if board[v][0] == "n":
-                free_positions.append(v)
+                free_spaces.append(v)
                 break
-    return free_positions
+    return free_spaces
 
 
 def isMiddle(index: int):
@@ -416,98 +331,6 @@ def getDirection(start: int, end: int):
     # Wenn die Richtung ungültig ist oder der nächste Index außerhalb des Spielbretts liegt, wird False zurückgegeben.
     return False
 
-def translateBoard(board):
-    """
-    Wandelt das Brett in ein neues Format um
-
-    Args:
-        board: Aktuelles Brett
-
-    Returns:
-        Umgewandltes Brett
-    """
-    color_board = []
-    for i in range(len(board)):
-        color_board.append(board[i][0])
-
-    translatedBoard = []
-    for i in range(6):
-        v1 = 7*i
-        v2 = 7*i+7
-        translatedBoard.append(color_board[v1:v2])
-    
-    return translatedBoard
-
-def getScore(window: str):
-    """
-    Berechnet die Punkte
-
-    Args:
-        window: Viererreihe aus dem Board
-
-    Returns:
-        Punkte für eine Viererreihe
-    """
-    countY = window.count("y")
-    countR = window.count("r")
-    countN = window.count("n")
-
-    if countY + countN == 4 and countY > 0:
-        if countY == 1:
-            return 1
-        elif countY == 2:
-            return 10
-        elif countY == 3:
-            return 100
-        else:
-            return 10000
-    if countR + countN == 4 and countR > 0:
-        if countR == 1:
-            return -1
-        elif countR == 2:
-            return -10
-        elif countR == 3:
-            return -100
-        else:
-            return -10000
-    return 0
-
-def evaluate(board):
-    translatedBoard = translateBoard(board)
-
-    # Wertung des Spielbretts
-    score = 0
-
-    # Horizontal
-    for row in range(6):
-        for col in range(4):
-            window = translatedBoard[row][col : col + 4]
-            window_string = "".join(window)
-            score += getScore(window_string)
-
-    # Vertikal
-    for col in range(7):
-        for row in range(3):
-            window = [translatedBoard[row + i][col] for i in range(4)]
-            window_string = "".join(window)
-            score += getScore(window_string)
-
-    # Diagonal (von links oben nach rechts unten)
-    for row in range(3):
-        for col in range(4):
-            window = [translatedBoard[row + i][col + i] for i in range(4)]
-            window_string = "".join(window)
-            score += getScore(window_string)
-
-    # Diagonal (von rechts oben nach links unten)
-    for row in range(3):
-        for col in range(3, 7):
-            window = [translatedBoard[row + i][col - i] for i in range(4)]
-            window_string = "".join(window)
-            score += getScore(window_string)
-
-    return score
-
 
 def checkWin(board: list):
     """
@@ -521,6 +344,7 @@ def checkWin(board: list):
         red: Rot hat gewonnen.
         None: Niemand hat gewonnen.
     """
+    won = None
 
     # Überprüfung der horizontalen Gewinnbedingung
     for row in range(6):
@@ -578,7 +402,7 @@ def checkWin(board: list):
                     else:
                         return "red"
 
-    return None
+    return won
 
 
 def makeMove(board: list, move: int, color: str):
@@ -600,127 +424,6 @@ def makeMove(board: list, move: int, color: str):
     newBoard[move] = f"{color}{newBoard[move][1:]}"
 
     return newBoard
-
-
-def getResults(board: list, depth: int, color: str, alpha: int, beta: int):
-    """
-    Wandelt das Spielbrett in ein Format um, das von der Minimax-Funktion verwendet werden kann.
-
-    Args:
-        board: Eine Liste, die das Spielbrett repräsentiert.
-        depth: Die maximale Tiefe der Rekursion, die vom Minimax-Algorithmus durchlaufen werden soll.
-        color: Die Farbe des Spielers, dessen bester Spielzug berechnet werden soll (z.B. 'y' für gelb oder 'r' für rot).
-        alpha: Der aktuelle Alpha-Wert des Alpha-Beta-Pruning-Algorithmus.
-        beta: Der aktuelle Beta-Wert des Alpha-Beta-Pruning-Algorithmus.
-
-    Returns:
-        Eine Liste mit dem besten Spielzug und seinem Bewertungswert, wenn die maximale Rekursionstiefe erreicht wurde.
-        Andernfalls eine Liste mit den Bewertungswerten aller möglichen Spielzüge.
-    """
-    # Wenn die maximale Rekursionstiefe erreicht wurde, gebe False zurück
-    if depth <= 0:
-        return False
-
-    # Initialisiere eine leere Ergebnisliste
-    results = []
-
-    # Durchlaufe alle freien Positionen auf dem Spielbrett
-    for position in getFreePositions(board):
-        # Führe den Spielzug aus und berechne den Bewertungswert des Spielbretts
-        newBoard = makeMove(board, position, color)
-        if color == "y":
-            maxPlayer = False
-            value = minimax(newBoard, depth - 1, maxPlayer, alpha, beta)
-            # Füge einen Bonus hinzu, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
-            if isMiddle(position):
-                value = value + 4
-        elif color == "r":
-            maxPlayer = True
-            value = minimax(newBoard, depth - 1, maxPlayer, alpha, beta)
-            # Ziehe einen Malus ab, wenn der Spielzug in der Mitte der untersten Reihe erfolgt
-            if isMiddle(position):
-                value = value - 4
-
-        # Füge den Bewertungswert des Spielzugs und seine Position der Ergebnisliste hinzu
-        results.append([value, position])
-
-    # Gibt die Ergebnisliste zurück
-    values = []
-    for i in range(len(results)):
-        values.append(results[i][0])
-    positions = []
-    for i in range(len(results)):
-        positions.append(results[i][1])
-    return values, positions
-
-
-def minimax(
-    board: list, depth: int, maxPlayer: bool, alpha: int, beta: int
-):
-    """
-    Ein Algorithmus, der den bestmöglichen Spielzug in einer Connect-4-Partie findet.
-
-    Args:
-        board: Eine Liste, die das Spielbrett repräsentiert.
-        position: Die Position des letzten Zugs.
-        depth: Die aktuelle Tiefe im Suchbaum.
-        maxPlayer: Ein Boolean, der angibt, ob der maximierende Spieler am Zug ist.
-        alpha: Der aktuelle Alpha-Wert.
-        beta: Der aktuelle Beta-Wert.
-
-    Returns:
-        Der Wert des besten Spielzugs.
-    """
-
-    # Wenn die maximale Tiefe erreicht wurde oder das Spiel gewonnen wurde
-    winner = checkWin(board)
-    if depth == 0 or winner != None:
-        # Falls Gelb gewonnen hat, gib 10000 zurück
-        if winner == "yellow":
-            return 10000
-        # Falls Rot gewonnen hat, gib -10000 zurück
-        elif winner == "red":
-            return -10000
-        # Falls die maximale Tiefe erreicht wurde, berechne den Wert des aktuellen Boards und gib ihn zurück
-        return evaluate(board)
-
-    # Wenn der maximierende Spieler am Zug ist
-    if maxPlayer:
-        bestValue = -1000000
-        # Für jeden möglichen Zug
-        for move in getFreePositions(board):
-            # Mach den Zug auf dem Board
-            newBoard = makeMove(board, move, "y")
-            # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
-            value = minimax(newBoard, depth - 1, False, alpha, beta)
-            # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
-            bestValue = max(bestValue, value)
-            # Aktualisiere den Alpha-Wert
-            alpha = max(alpha, bestValue)
-            # Wenn der Beta-Wert kleiner als oder gleich dem Alpha-Wert ist, breche die Schleife ab
-            if beta <= alpha:
-                break
-        # Gib den besten Wert zurück
-        return bestValue
-
-    # Wenn der minimierende Spieler am Zug ist
-    else:
-        bestValue = 1000000
-        # Für jeden möglichen Zug
-        for move in getFreePositions(board):
-            # Mach den Zug auf dem Board
-            newBoard = makeMove(board, move, "r")
-            # Berechne den Wert des Zuges mit Hilfe des Minimax-Algorithmus
-            value = minimax(newBoard, depth - 1, True, alpha, beta)
-            # Wenn der berechnete Wert besser als der aktuelle beste Wert ist, aktualisiere den besten Wert
-            bestValue = min(bestValue, value)
-            # Aktualisiere den Beta-Wert
-            beta = min(beta, bestValue)
-            # Wenn der Beta-Wert kleiner als oder gleich dem Alpha-Wert ist, breche die Schleife ab
-            if beta <= alpha:
-                break
-        # Gib den besten Wert zurück
-        return bestValue
 
 
 def moveSyntax(move: int):
@@ -770,7 +473,6 @@ def drawBall(x, y):
 def put(column: int, board: list):
     i = 35
     inColumn = False
-    accuracy = None
     while i >= 0:
         if (i + column) not in occupied:
             occupied.append(i + column)
@@ -781,17 +483,10 @@ def put(column: int, board: list):
             waitRect.center = (width / 2, height // 20)
             screen.blit(wait, waitRect)
             p.display.update()
+            time.sleep(0.5)
             if player:
-                values, positions = getResults(board, 7, "y", -1000000, 1000000)
-                current = values[positions.index(i + column)]
-                accuracy = getAccuracy(current, max(values), min(values), "y")
-                blunder = isBlunder(accuracy, max(values), min(values), current, "y")
                 board[i + column] = "y" + moveSyntax(move)
             else:
-                values, positions = getResults(board, 7, "r", -1000000, 1000000)
-                current = values[positions.index(i + column)]
-                accuracy = getAccuracy(current, max(values), min(values), "r")
-                blunder = isBlunder(accuracy, max(values), min(values), current, "r")
                 board[i + column] = "r" + moveSyntax(move)
             inColumn = True
             x = column * sizeOne + (sizeOne / 2)
@@ -800,10 +495,7 @@ def put(column: int, board: list):
             break
         else:
             i = i - 7
-    try:
-        return inColumn, accuracy, blunder
-    except:
-        return None, None, None
+    return inColumn
 
 
 # Boolean: True = (Das Spiel ist am laufen) False = (Das Spiel ist nicht mehr am laufen)
@@ -815,14 +507,10 @@ player = True
 # Metadaten für den ersten Spieler (yellow)
 yellowTime = None
 yellowTotalTime = 0
-yellowAccuracy = 0
-yellowBlunder = 0
 
 # Metadaten für den zweiten Spieler (red)
 redTime = None
 redTotalTime = 0
-redAccuracy = 0
-redBlunder = 0
 
 
 # Solange das Spiel online ist, sollte es dauernd das Feld überprüfen.
@@ -838,7 +526,7 @@ while online:
             if player is not None:
                 # In played wird gespeichert ob jemand gesetzt hat.
                 column = p.mouse.get_pos()[0] // sizeOne
-                played, accuracy, blunder = put(column, board)
+                played = put(column, board)
                 # Spielzug wird um 1 erhöht
                 move = move + 1
                 # In status wird gespeichert ob jemand gewonnen hat.
@@ -853,8 +541,6 @@ while online:
                 if not status and not draw:
                     if player:
                         # Spieler wird gewechselt
-                        yellowAccuracy = yellowAccuracy + accuracy
-                        yellowBlunder = yellowBlunder + blunder
                         if yellowTime is not None:
                             yellowTotalTime = yellowTotalTime + (
                                 time.time() - yellowTime
@@ -868,8 +554,6 @@ while online:
                         player = False
                     else:
                         # Spieler wird gewechselt
-                        redAccuracy = redAccuracy + accuracy
-                        redBlunder = redBlunder + blunder
                         redTotalTime = redTotalTime + (time.time() - redTime)
                         yellowTime = time.time()
                         p.draw.rect(
@@ -952,20 +636,13 @@ while online:
 
                     # Accuracy
                     setValue(gameID * 14 + 8, 4, worksheet, "Accuracy")
-                    setValue(
-                        gameID * 14 + 9,
-                        4,
-                        worksheet,
-                        round(yellowAccuracy / yellowMoves, 2),
-                    )
-                    setValue(
-                        gameID * 14 + 10, 4, worksheet, round(redAccuracy / redMoves, 2)
-                    )
+                    setValue(gameID * 14 + 9, 4, worksheet, "None")
+                    setValue(gameID * 14 + 10, 4, worksheet, "None")
 
                     # Blunder
                     setValue(gameID * 14 + 8, 5, worksheet, "Blunder")
-                    setValue(gameID * 14 + 9, 5, worksheet, yellowBlunder)
-                    setValue(gameID * 14 + 10, 5, worksheet, redBlunder)
+                    setValue(gameID * 14 + 9, 5, worksheet, "None")
+                    setValue(gameID * 14 + 10, 5, worksheet, "None")
 
                     # Date
                     setValue(gameID * 14 + 12, 1, worksheet, "Date")
@@ -1029,12 +706,8 @@ while online:
                         screen.fill(p.Color(0, 0, 0))
                         yellowTime = None
                         yellowTotalTime = 0
-                        yellowAccuracy = 0
-                        yellowBlunder = 0
                         redTime = None
                         redTotalTime = 0
-                        redAccuracy = 0
-                        redBlunder = 0
                         player = True
 
         # Das Feld wird gezeichnet
